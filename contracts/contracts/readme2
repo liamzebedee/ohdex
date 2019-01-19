@@ -1,0 +1,228 @@
+
+    register user address A
+    deposit/withdraw - user needs to show index is their address
+
+    user submits tx to relayers (from i, to j, amount, fee, nonce) + a signature
+    user commits tx hash
+
+    relayers collect txs and publish ZKP 
+        A = {}
+        B = {}
+        nonces = {}
+        
+        for tx in txs:
+            addr = A[i] 
+            if validsig(tx, addr) and B[from][0] >= amount + fee:
+                B[i] -= amount
+                B[j] += amount
+                N[i] += 1
+        
+        return (
+            root(A),
+            root(B),
+            root(nonces)
+        )
+    
+    commit ZKP to altchain and mainchain
+
+    prove to mainchain wrapperbank that you 
+        1) own altchain coins as of this moment
+        2) they are locked up on the altchain (they should be in an escrow contract)
+    
+    then it mints x wrapper tokens based on the merkle proofs
+
+
+the ZKP is to facilitate interchain proofs of balance
+
+
+1. 
+
+User transfers tokens to altchain Escrow for time T
+
+Relayers compute proof of interchain escrow balances, and submit to (altchain, mainchain)
+
+User:
+- generates merkle proof of escrow transfer
+- verifies the proof corresponds with the escrow roots of (altchain, mainchain)
+
+
+2.
+
+User submits proof to mainchain WrapperTokenBank contract
+Contract verifies proof, and generates tokens
+
+
+3. 
+
+User Alice trades WrapperToken's with another User Bob
+Bob then wants to redeem the mainchain tokens
+
+Bob transfers WrapperToken's to mainchain Escrow for time T
+Relayers compute proof of interchain escrow balances, and submit to (altchain, mainchain)
+
+Bob:
+- generates merkle proof of escrow transfer
+- verifies the proof corresponds with the escrow roots of (altchain, mainchain)
+
+Bob submits proof to mainchain WrapperTokenBank contract
+mainchain WrapperTokenBank:
+- burn's the WrapperToken's
+- unlock's the token escrow balance
+
+
+
+
+1. 
+
+MAINCHAIN:
+    bridgeBalance[user] == 0
+    wrappedBalance[user] == 0
+
+ALTCHAIN:
+    bridgeBalance[user] == 0
+
+User submits to ALTCHAIN
+
+
+MAINCHAIN:
+ALTCHAIN:
+    bridgeBalance[user] = 10
+
+
+
+2.
+
+User submits to MAINCHAIN
+
+MAINCHAIN:
+ALTCHAIN:
+    bridgeBalance[user] = 0
+
+MAINCHAIN:
+    wrappedBalance[user] = 10
+
+
+
+
+Problem: different chains have different security
+The user needs to know that their token on one chain is now valid on the main chain before letting the transfer happen
+
+
+
+User commits to escrowing tokens to bank
+Bank commits to exchanging tokens for wrapper tokens
+Bank reveals, escrow[user] = 10
+    Tokens are now locked in escrow
+User then reveals thanks to bank, escrow[user] = 0, mintable[user] = 10
+User then calls mint, mintable[user] = 0, balance[user] = 10
+
+
+To withdraw:
+User calls burn, mintable[user] += 10, balance[user] = 0
+User commits to escrowing tokens from bank
+Bank commits to exchanging wrapper tokens to tokens
+Bank reveals, mintable[user] = 0, escrow[user] = 10
+User reveals thanks to bank, escrow[user] = 0, transfer(bank, user, 10)
+
+
+
+
+ALTCHAIN
+MAINCHAIN
+
+
+
+
+
+
+
+
+now even deeper:
+
+1. 
+
+MAINCHAIN
+ALTCHAIN
+    escrow[user] = 0
+
+
+User submits TX to relayer
+
+ALTCHAIN
+    escrow[user] = 10
+MAINCHAIN
+    escrow[user] = 0
+
+User waits
+
+ALTCHAIN
+    escrow[user] = 10
+MAINCHAIN
+    escrow[user] = 10
+
+
+User submits signed tx to relayer GEN_WRAP_TOKEN
+
+wrapperBalance proof verifier:
+    for tx in txs:
+        from = checksig(tx, sig)
+        require(from == tx.from)
+        
+        tx is a GEN_WRAP_TOKEN call
+        
+        require(escrow[from] >= tx.amount)
+        escrow[from] -= tx.amount
+        wrapperBalance[from] += tx.amount
+
+
+
+
+
+ALTCHAIN
+    escrow[user] = 0
+MAINCHAIN
+    escrow[user] = 0
+    wrapperBalance[user] += 10
+
+
+
+
+3.
+
+Another user wants to withdraw wrapper token
+User submits TX to relayer
+
+MAINCHAIN
+ALTCHAIN
+    wrapperBalance[user] -= 10
+    bankBalance -= 10
+
+ALTCHAIN
+    transfer(user, amount)
+
+
+
+
+
+
+
+
+escrow contract locks these tokens for T, and they can be redeemed by method of revealing a secret
+
+relayer submits proof of updated balances to both alt and main chain
+user computes merkle proof, and verifies the merkle roots equal, and that merkle roots are the same on both chains
+
+user then commits to locking the altchain coins, and exchanges with relayer to unlock mainchain minted coins
+
+relayer submits proof of updated balances, and updated mint commitments
+user computes merkle proof of mint commitment and balance, and verifies the merkle roots equal, and that merkle roots are the same on both chains
+user submits merkle proof to mint the wrapper tokens
+
+
+
+the trust vectors are:
+
+- wrapped tokens are assumed to be as trusted as the chain which they wrap
+- the contracts deployed on such a chain should be verified ONCE (since they're immutable)
+- the interactive protocol of commit-reveal allows the bridge relayer and the user to make sure neither will exploit the other with time arbitration.
+
