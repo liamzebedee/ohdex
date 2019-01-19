@@ -6,6 +6,8 @@
     user commits tx hash
 
     relayers collect txs and publish ZKP 
+
+    prove(A,B,nonces)
         A = {}
         B = {}
         nonces = {}
@@ -17,11 +19,12 @@
                 B[j] += amount
                 N[i] += 1
         
-        return (
-            root(A),
-            root(B),
-            root(nonces)
-        )
+
+        // compute merkle roots
+        A == root(A)
+        B == root(B)
+        nonces == root(nonces);
+    
     
     commit ZKP to altchain and mainchain
 
