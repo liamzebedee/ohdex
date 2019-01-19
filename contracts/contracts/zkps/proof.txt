@@ -1,0 +1,2 @@
+token was transferred successfully into bridge
+token is locked for time T

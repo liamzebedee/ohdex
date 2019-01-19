@@ -109,6 +109,10 @@ The user needs to know that their token on one chain is now valid on the main ch
 
 
 
+
+
+
+
 User commits to escrowing tokens to bank
 Bank commits to exchanging tokens for wrapper tokens
 Bank reveals, escrow[user] = 10
@@ -123,6 +127,12 @@ User commits to escrowing tokens from bank
 Bank commits to exchanging wrapper tokens to tokens
 Bank reveals, mintable[user] = 0, escrow[user] = 10
 User reveals thanks to bank, escrow[user] = 0, transfer(bank, user, 10)
+
+
+
+
+rough pseudcode:
+
 
 
 

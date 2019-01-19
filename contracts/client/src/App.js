@@ -1,16 +1,44 @@
 import React, { Component } from "react";
 import SimpleStorageContract from "./contracts/SimpleStorage.json";
 import getWeb3 from "./utils/getWeb3";
+import { DrizzleContext } from 'drizzle-react';
+import { Drizzle, generateStore } from "drizzle";
+
 
 import "./App.css";
 
+function drizzleContract(web3, name) {
+  return {
+    contractName: name,
+    web3Contract: new web3.eth.Contract(
+      require(`./contracts/${name}.json`), 
+      "0x"
+    )
+  }
+}
+
+let drizzle; 
+
 class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+  state = { 
+    drizzle: null, 
+    web3: null, accounts: null, contract: null 
+  };
 
   componentDidMount = async () => {
     try {
       // Get network provider and web3 instance.
       const web3 = await getWeb3();
+
+      drizzle = new Drizzle({
+        contracts: [
+          // drizzleContract('CrosschainBank')
+        ]
+      })
+
+      this.setState({
+        drizzle
+      })
 
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts();
@@ -52,19 +80,21 @@ class App extends Component {
     if (!this.state.web3) {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
+    if(!this.state.drizzle) {
+      return <div>Loading...</div>
+    }
     return (
       <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Your Truffle Box is installed and ready.</p>
-        <h2>Smart Contract Example</h2>
-        <p>
-          If your contracts compiled and migrated successfully, below will show
-          a stored value of 5 (by default).
-        </p>
-        <p>
-          Try changing the value stored on <strong>line 40</strong> of App.js.
-        </p>
-        <div>The stored value is: {this.state.storageValue}</div>
+        <DrizzleContext.Provider drizzle={drizzle}>
+          <DrizzleContext.Consumer>
+          {drizzleContext => {
+              const { drizzle, drizzleState, initialized } = drizzleContext;
+              console.log(drizzleState);
+              // web3.eth.net.getId()
+            }
+          }
+          </DrizzleContext.Consumer>
+        </DrizzleContext.Provider>
       </div>
     );
   }
