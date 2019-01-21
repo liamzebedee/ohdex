@@ -21,6 +21,9 @@ contract MainBank {
     ) public {
         address to = msg.sender;
         balance -= amount;
+
+        // Prove that you have a locked a deposit at the altchain bank
+        // require(deposits[altchainbank][to] == amount)
         wrapperToken.mint(to, amount);
     }
 
