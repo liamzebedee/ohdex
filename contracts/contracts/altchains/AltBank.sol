@@ -5,6 +5,8 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 contract Altbank {
     uint private balance;
     IERC20 altToken;
+    
+    bytes root;
 
     struct Escrow {
         uint amount;
@@ -35,15 +37,31 @@ contract Altbank {
 
     function keepDeposit(
         address user,
-        bytes32  secret
+        uint depositAmount,
+        bytes32 secret
     ) internal {
         Escrow storage escrow = escrowed[user];
-        bytes memory secret2 = abi.encodePacked(secret);
-        if(sha256(secret2) == escrow.commit) {
-            altToken.transfer(address(this), escrow.amount);
-        } else {
-            revert("INCORRECT_SECRET");
-        }
+
+        bytes memory secret2 = abi.encodePacked(
+            depositAmount,
+            secret
+        );
+        require(depositAmount == escrow.amount, "AMOUNTS_NOT_EQUAL");
+        require(sha256(secret2) == escrow.commit, "REVEAL_NOT_CORRECT");
+
+        altToken.transfer(address(this), escrow.amount);
+    }
+
+
+    function computeCommit(
+        uint depositAmount,
+        bytes32 secret
+    ) external returns (bytes32) {
+        bytes32 commit = sha256(abi.encodePacked(
+            depositAmount,
+            secret
+        ));
+        return commit;
     }
 
     function withdraw(
@@ -58,5 +76,9 @@ contract Altbank {
 
         altToken.transfer(to, amount);
         balance -= amount;
+    }
+
+    function consensus() public {
+
     }
 }

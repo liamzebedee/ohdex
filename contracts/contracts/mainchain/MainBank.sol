@@ -1,7 +1,6 @@
 
 pragma solidity ^0.5.0;
 
-//x pragma solidity ^0.4.25;
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./WrapperToken.sol";
 
@@ -29,7 +28,7 @@ contract MainBank {
 
     function repay(
         uint amount
-    ) public {
+    ) internal {
         address to = msg.sender;
         wrapperToken.burnFrom(to, amount);
     }

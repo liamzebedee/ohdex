@@ -22,15 +22,11 @@ import {
 } from '../build/wrappers/alt_token';
 
 
-import { Web3ProviderEngine, RPCSubprovider } from "0x.js";
-import { NonceTrackerSubprovider } from '@0x/subproviders'
-import { Web3Wrapper } from '@0x/web3-wrapper';
+import { Web3ProviderEngine, RPCSubprovider, BigNumber } from "0x.js";
+import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 
 
-
-
-
-function getDeployArgs(name, pe, from) {
+function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Partial<TxData>] {
     let json = require(`../build/contracts/${name}.json`);
     let bytecode = json.bytecode;
     let abi = json.abi;
@@ -49,7 +45,7 @@ describe('hecticism', () => {
     let accounts;
     let user;
 
-    before(async () => {
+    setup(async () => {
         pe = new Web3ProviderEngine();
         pe.addProvider(new RPCSubprovider('http://127.0.0.1:9545'))
         pe.start()
@@ -58,31 +54,75 @@ describe('hecticism', () => {
         user = accounts[0]
     });
 
-
     it('does the job', async () => {
         // @ts-ignore
         let altToken = await AltTokenContract.deployAsync(...getDeployArgs('AltToken', pe, user));
         
-        await altToken.mint2(user, 2000).sendTransaction();
+        // @ts-ignore
+        let altBank = await AltbankContract.deployAsync(
+            ...getDeployArgs('Altbank', pe, user),
+            altToken.address
+        );
         
+        // @ts-ignore
+        let wrapperToken = await WrapperTokenContract.deployAsync(
+            ...getDeployArgs('WrapperToken', pe, user),
+        )
+        
+        // @ts-ignore
+        let mainBank = await MainBankContract.deployAsync(
+            ...getDeployArgs('MainBank', pe, user),
+            wrapperToken.address
+        )
+
+
+
+
+        await altToken.mint2.sendTransactionAsync(user, new BigNumber(2000));
+
+        const DEPOSIT_AMT = new BigNumber(2000);
+        const SECRET = "0x123abc";
+        let commit = await altBank.computeCommit.callAsync(DEPOSIT_AMT, SECRET);
+        console.log(commit)
+
+        await altBank.makeEscrow.sendTransactionAsync(
+            new BigNumber(2000), 
+            commit
+        )
     })
 
     teardown(() => {
         pe.stop();
     })
     
-
-    
-    // let altBank = new AltBank(altToken.address)
-    
-    // let wrapperToken = new WrapperToken()
-    // let mainBank = new MainBank(wrapperToken.address)
-    
     /*
     
     // Start
     
     // user exchanges intent to mint with relay and signs transaction to commit
+
+    // user commits to mainchain their intent to mint
+    // relayer commits to mainchain intent to accept deposit
+    // user deposits with H(commit to accept deposit)
+    // relayer reveals, and claims deposits
+        // logic: H(deposit claim commitment, H(reveal_addr, reveal_amount,)) == 
+    // 
+
+    // the mechanism which keeps balances true
+    // is the escrow of the user only unlocks if the commitment is to the exact amount stated
+    // which is encoded in the smart contract
+    // the tx can thus be encoded in a ZKP, since the commitment is part of verifying the logic
+    // and thus the smart contract on the other chain, built with the same ZKP verifier
+    // will also encode this logic
+    // the last issue is of whether the money will actually be claimed on one chain
+    // in which case
+    // this is left out of the scope of this demo
+    // but basically
+    // the money is automatically claimed when updating the bridge smart contract
+    // and there are parameters set
+    // such that the oracles update the state roots of each blockchain
+    // otherwise the user would not be able to redeem their funds
+    // whether they make a deposit or a withdrawal
     
     // mainchain updates root
     // altchain  updates root
