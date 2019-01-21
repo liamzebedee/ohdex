@@ -1,5 +1,4 @@
 pragma solidity ^0.5.0;
-// pragma solidity ^0.4.25;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
@@ -9,7 +8,7 @@ contract Altbank {
 
     struct Escrow {
         uint amount;
-        bytes commit;
+        bytes32 commit;
     }
 
     mapping(address => Escrow) escrowed;
@@ -21,25 +20,26 @@ contract Altbank {
         altToken = IERC20(altToken_);
     }
 
-    function escrow(
+    function makeEscrow(
         uint amount,
-        bytes commit
+        bytes32  commit
     ) public {
         address from = msg.sender;
         balance += amount;
-        Escrow escrow = new Escrow({
+        Escrow memory escrow = Escrow({
             commit: commit,
             amount: amount
         });
-        escrowed[from] += escrow;
+        escrowed[from] = escrow;
     }
 
     function keepDeposit(
         address user,
-        bytes secret
+        bytes32  secret
     ) internal {
-        Escrow escrow = escrowed[user];
-        if(sha256(secret) == escrow.commit) {
+        Escrow storage escrow = escrowed[user];
+        bytes memory secret2 = abi.encodePacked(secret);
+        if(sha256(secret2) == escrow.commit) {
             altToken.transfer(address(this), escrow.amount);
         } else {
             revert("INCORRECT_SECRET");

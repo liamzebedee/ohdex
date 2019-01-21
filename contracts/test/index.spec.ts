@@ -60,8 +60,11 @@ describe('hecticism', () => {
 
 
     it('does the job', async () => {
+        // @ts-ignore
         let altToken = await AltTokenContract.deployAsync(...getDeployArgs('AltToken', pe, user));
-
+        
+        await altToken.mint2(user, 2000).sendTransaction();
+        
     })
 
     teardown(() => {
@@ -69,7 +72,7 @@ describe('hecticism', () => {
     })
     
 
-    // altToken.mint(user, 2000)
+    
     // let altBank = new AltBank(altToken.address)
     
     // let wrapperToken = new WrapperToken()
