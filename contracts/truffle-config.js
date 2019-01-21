@@ -6,7 +6,7 @@ module.exports = {
   contracts_build_directory: path.join(__dirname, "client/src/contracts"),
   compilers: {
     solc: {
-      version: "0.4.25",
+      // version: "0.4.25",
       docker: true,
     }
   }  

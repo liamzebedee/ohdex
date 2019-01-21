@@ -1,3 +1,22 @@
+proof that lock(amount, token, chain)
+proof that burn(amount, token, chain)
+
+
+
+if(locked[altchain][from][token] == amount) {
+    
+}
+
+if(burnt[mainchain][from][token] == amount) {
+    send tokens here
+    // thus completes lock on mainchain
+}
+
+
+
+
+
+
 an idea of using smart contracts, hash-locked time contracts / escrow commitment protocols, and zero-knowledge proofs with merkle trees, to make cross-chain exchange possible
 
 trust is hereby only placed upon:
@@ -39,3 +58,15 @@ when they wish to exchange on the altchain, they engage in the same escrow proce
 
 
 onus on chain security is put upon the user 
+
+
+
+
+
+
+We can genericise this scheme even further by:
+
+defining the (escrow, reserve) as simple addresses within each chain
+realising every tx as a transfer, and only one merkle root necessary
+allowing mints with a merkle proof of the (escrow) having a balance from you
+

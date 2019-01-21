@@ -1,4 +1,5 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
+const path = require("path");
 
 module.exports = {
     networks: {
@@ -16,5 +17,14 @@ module.exports = {
             },
             network_id: '*'
         }
-    }
+    },
+    // contracts_build_directory: path.join(__dirname, "client/src/contracts"),
+    contracts_build_directory: path.join(__dirname, "build/contracts"),
+    compilers: {
+        solc: {
+            // version: "0.4.25",
+            version: "0.5.0",
+            docker: true,
+        }
+    }  
 }

@@ -1,1 +1,3 @@
-build
+build/
+client/src/contracts
+node_modules
