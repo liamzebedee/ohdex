@@ -5,7 +5,8 @@
   "main": "truffle-config.js",
   "scripts": {
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
-    "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3"
+    "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
+    "relayer": "ts-node zeroknowledge/relayer"
   },
   "author": "",
   "license": "ISC",
@@ -22,12 +23,14 @@
     "@types/mocha": "^5.2.5",
     "add": "^2.0.6",
     "chai": "^4.2.0",
+    "circom": "^0.0.24",
     "ethereum-types": "^1.1.6",
     "ethers": "^4.0.21",
     "lodash": "^4.17.11",
     "make-promises-safe": "^4.0.0",
     "mocha": "^5.2.0",
     "openzeppelin-solidity": "^2.1.2",
+    "snarkjs": "^0.1.9",
     "source-map-support": "^0.5.10",
     "ts-mocha": "^2.0.0",
     "ts-node": "^7.0.1",

@@ -83,12 +83,16 @@ describe('hecticism', () => {
         const DEPOSIT_AMT = new BigNumber(2000);
         const SECRET = "0x123abc";
         let commit = await altBank.computeCommit.callAsync(DEPOSIT_AMT, SECRET);
-        console.log(commit)
+        // console.log(commit)
 
         await altBank.makeEscrow.sendTransactionAsync(
             new BigNumber(2000), 
             commit
-        )
+        );
+
+        // user sends tx to relayer
+        // relayer constructs proof and updates main and altchain contracts
+        
     })
 
     teardown(() => {
@@ -124,6 +128,8 @@ describe('hecticism', () => {
     // otherwise the user would not be able to redeem their funds
     // whether they make a deposit or a withdrawal
     
+
+
     // mainchain updates root
     // altchain  updates root
     

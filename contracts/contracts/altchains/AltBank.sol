@@ -66,10 +66,11 @@ contract Altbank {
     }
 
     function withdraw(
-        address to,
         uint amount,
         bytes32[] memory proof
     ) public {
+        address to = msg.sender;
+
         // Prove that you've burnt (amount) wrapped tokens on the mainchain 
         // that represents a deposit in this bank
         bytes32 leaf = sha256(abi.encodePacked(
@@ -85,5 +86,7 @@ contract Altbank {
 
     function consensus() public {
         interchainStateroot = 0x0;
+        // circuit outputs an array of secrets used with keepDeposit
+        // TODO
     }
 }
