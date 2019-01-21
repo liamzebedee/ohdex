@@ -1,12 +1,13 @@
 pragma solidity ^0.5.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "../MerkleProof.sol";
 
 contract Altbank {
     uint private balance;
-    IERC20 altToken;
+    IERC20 public altToken;
     
-    bytes root;
+    bytes32 interchainStateroot;
 
     struct Escrow {
         uint amount;
@@ -66,19 +67,23 @@ contract Altbank {
 
     function withdraw(
         address to,
-        uint amount
+        uint amount,
+        bytes32[] memory proof
     ) public {
         // Prove that you've burnt (amount) wrapped tokens on the mainchain 
         // that represents a deposit in this bank
+        bytes32 leaf = sha256(abi.encodePacked(
+            to,
+            amount
+        ));
 
-        // merkle proof of bank deposit events
-        // ie. 
+        require(MerkleProof.verify(proof, interchainStateroot, leaf), "NO_PROOF");
 
         altToken.transfer(to, amount);
         balance -= amount;
     }
 
     function consensus() public {
-
+        interchainStateroot = 0x0;
     }
 }
