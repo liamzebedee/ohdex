@@ -24,7 +24,7 @@ module.exports = {
         solc: {
             // version: "0.4.25",
             version: "0.5.0",
-            docker: true,
+            docker: false,
         }
     }  
 }

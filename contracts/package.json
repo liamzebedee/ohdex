@@ -3,7 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
+  "watch": {
+    "contracts": {
+      "patterns": [
+        "./contracts/contracts/**/*.sol"
+      ],
+      "extensions": "sol"
+    }
+  },
   "scripts": {
+    "watch-sol": "npm-watch compile-sol",
+    "compile-sol": "truffle compile --all",
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "relayer": "ts-node zeroknowledge/relayer"
@@ -32,9 +42,13 @@
     "openzeppelin-solidity": "^2.1.2",
     "snarkjs": "^0.1.9",
     "source-map-support": "^0.5.10",
+    "truffle-hdwallet-provider": "^1.0.2",
     "ts-mocha": "^2.0.0",
     "ts-node": "^7.0.1",
     "typescript": "^3.2.4",
     "yarn": "^1.13.0"
+  },
+  "devDependencies": {
+    "npm-watch": "^0.5.0"
   }
 }
