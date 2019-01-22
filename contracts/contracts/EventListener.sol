@@ -18,4 +18,11 @@ contract EventListener {
         emit ProofSubmitted(_chainId, _proof);
     }
 
+    function getProof(uint256 _chainId, uint256 _index) public view returns(bytes32) {
+        return chainIdToProofs[_chainId][_index]; 
+    }
+
+    function getLatestProof(uint256 _chainId) public view returns(bytes32) {
+        return getProof(_chainId, chainIdToProofs[_chainId].length - 1);
+    }
 }
