@@ -21,6 +21,10 @@ import {
     AltTokenContract
 } from '../build/wrappers/alt_token';
 
+import {
+    VerifierContract
+} from '../build/wrappers/verifier';
+
 
 import { Web3ProviderEngine, RPCSubprovider, BigNumber } from "0x.js";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
@@ -50,7 +54,7 @@ function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Pa
 
 import { SignatureType } from '@0x/types';
 import * as ethUtil from 'ethereumjs-util';
-import { verifySig } from '../zeroknowledge/relayer';
+import { verifySig } from '../zeroknowledge/src/relayer';
 
 function makeSignature(message: Buffer, privateKey: Buffer, signatureType: SignatureType) {
     const prefixedMessage = ethUtil.hashPersonalMessage(message);
@@ -267,18 +271,11 @@ describe('hecticism', function() {
 
         assert(circuit.checkWitness(witness));
         
-        const { stringifyBigInts, unstringifyBigInts } = require('snarkjs/src/stringifybigint.js')
-        const proving_key = unstringifyBigInts(JSON.parse(fs.readFileSync(__dirname+"/../proving_key.json", "utf8")))
-
-        console.time('generating-proof')
-        const { proof, publicSignals } = snarkjs.original.genProof(
-            proving_key, 
-            witness
+        let verifier = await VerifierContract.deployAsync(
+            ...getDeployArgs('Verifier', pe, user)
         );
-        console.timeEnd('generating-proof')
-        fs.writeFileSync("proof.json", JSON.stringify(stringifyBigInts(proof), null, 1), "utf-8");
-        fs.writeFileSync("public.json", JSON.stringify(stringifyBigInts(publicSignals), null, 1), "utf-8");
         
+        // verifier.verifyProof.callAsync(a, a_p, b, b_p, c, c_p, h, k, input);
     })
 
     it.skip('runs a zkp', async() => {
@@ -322,8 +319,6 @@ describe('hecticism', function() {
         const vk_proof = JSON.parse(fs.readFileSync("eddsa_test.vk_proof", "utf8"));
 
         const {proof, publicSignals} = snarkjs.genProof(vk_proof, witness);
-
-        
         
     })
 

@@ -8,7 +8,9 @@ template Interchange(n) {
     for(var i = 0; i < txs.length; i++) {
         component tx = Tx(txs[i]);
         
-        
+        component main = EdDSAVerifier(80);
     }
+
+    
 }
 

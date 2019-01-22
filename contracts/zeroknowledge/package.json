@@ -1,0 +1,14 @@
+{
+  "name": "zeroknowledge",
+  "version": "1.0.0",
+  "description": "proof that lock(amount, token, chain) proof that burn(amount, token, chain)",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "contracts:compile": "truffle compile --quiet"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -109,6 +109,21 @@ class Relayer {
         assert(this.circuit.checkWitness(witness));
         console.timeEnd('check-witness');
 
+
+
+
+        const { stringifyBigInts, unstringifyBigInts } = require('snarkjs/src/stringifybigint.js')
+        const proving_key = unstringifyBigInts(JSON.parse(fs.readFileSync(__dirname+"/../proving_key.json", "utf8")))
+
+        console.time('generating-proof')
+        const { proof, publicSignals } = snarkjs.original.genProof(
+            proving_key, 
+            witness
+        );
+        console.timeEnd('generating-proof')
+        fs.writeFileSync("proof.json", JSON.stringify(stringifyBigInts(proof), null, 1), "utf-8");
+        fs.writeFileSync("public.json", JSON.stringify(stringifyBigInts(publicSignals), null, 1), "utf-8");
+
     }
 
     async generateProof2() {
