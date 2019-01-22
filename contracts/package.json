@@ -6,7 +6,8 @@
   "scripts": {
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
-    "relayer": "ts-node zeroknowledge/relayer"
+    "relayer": "ts-node zeroknowledge/relayer",
+    "build:zkp": "circom zeroknowledge/circomlib/test/circuits/eddsa_test.circom -o eddsa_test.json -v"
   },
   "author": "",
   "license": "ISC",

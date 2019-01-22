@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "lib": [
-            "es6"
+            "es6",
+            "es2017.string"
         ],
         "typeRoots": [
           "node_modules/@0x/typescript-typings/types",
