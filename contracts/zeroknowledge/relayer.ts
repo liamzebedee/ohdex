@@ -4,19 +4,83 @@ const compiler = require("circom");
 const smt = require("./circomlib/src/smt");
 
 const bigInt = snarkjs.bigInt;
+const path = require('path');
+import fs from 'fs';
+
+const winston = require('winston')
+const { createLogger, format, transports } = require('winston');
+const logger = winston.createLogger({
+    level: 'info',
+    format: format.combine(
+        format.splat(),
+        format.simple()
+    ),
+    defaultMeta: {service: 'user-service'},
+    transports: [new transports.Console()],
+  });
+  
+
+
+function padLeft(string: string, toLength: number, sign="0") {
+    if(string.length > toLength) {
+        throw new Error(`String is larger than length we are padding it to: ${string.length} > ${toLength}\nString: ${string}`)
+    }
+    return string.padStart(toLength, sign)
+    // console.log(chars, string.length, string)
+    // return new Array(toLength - string.length + 1).join(sign) + string;
+};
+
+function toFixedBuf(lengthInBytes: number, hexStr: string) {
+    return Buffer.from(
+        padLeft(hexStr, lengthInBytes/4), 'hex'
+    );
+}
+
+
+function assert(stmt) {
+    if(!stmt) throw new Error("ASSERTION_FAIL"); 
+}
+
+function buffer2bits(buff) {
+    const res = [];
+    for (let i=0; i<buff.length; i++) {
+        for (let j=0; j<8; j++) {
+            if ((buff[i]>>j)&1) {
+                res.push(bigInt.one);
+            } else {
+                res.push(bigInt.zero);
+            }
+        }
+    }
+    return res;
+}
+
 
 
 const newRelayer = async () => {
-    let tree = await smt.newMemEmptyTrie();
-    return new Relayer(tree)
+    let circuit = new snarkjs.Circuit(
+        require("../eddsa_test.json")
+    );
+    const proving_key = JSON.parse(fs.readFileSync("../proving_key.json", "utf8"));
+
+    // let tree = await smt.newMemEmptyTrie();
+    return new Relayer(null, circuit, proving_key)
 }
+
+
+const eddsa = require("./circomlib/src/eddsa.js");
 
 class Relayer {
     tree = null
+    txQueue: Buffer[]
     i = 0
+    circuit = null
+    proving_key = null
 
-    constructor(tree) {
+    constructor(tree, circuit, proving_key) {
         this.tree = tree;
+        this.circuit = circuit
+        this.proving_key = proving_key
     }
 
     async addTx(tx) {
@@ -26,6 +90,28 @@ class Relayer {
     }
 
     async generateProof() {
+        // const msgBits = buffer2bits(msg);
+        // const r8Bits = buffer2bits(pSignature.slice(0, 32));
+        // const sBits = buffer2bits(pSignature.slice(32, 64));
+        // const aBits = buffer2bits(pPubKey);
+        logger.log('info', `${this.txQueue.length} tx's to process`)
+        let txsBuf = this.txQueue.map(buffer2bits);
+        
+        logger.log('info', `calculating witness`)
+        console.time('calc-witness');
+        const witness = this.circuit.calculateWitness({
+            txs: buffer2bits(txsBuf)
+        });
+        console.timeEnd('calc-witness');
+
+        logger.log('info', `checking witness`)
+        console.time('check-witness');
+        assert(this.circuit.checkWitness(witness));
+        console.timeEnd('check-witness');
+
+    }
+
+    async generateProof2() {
         // let siblings = res.siblings;
 
         const arr = [];
@@ -56,19 +142,6 @@ class Relayer {
 }
 
 
-/**
- * 
- * let tree = await smt.newMemEmptyTrie();
-    const arr = [];
-    const N = 100;
-    for (let i=0; i<N; i++) {
-        arr.push(bigInt(i));
-    }
-    // const insArr = perm(arr);
-    for (let i=0; i<N; i++) {
-        await tree.insert(arr[i], i);
-    }
- */
 
 
 async function run() {

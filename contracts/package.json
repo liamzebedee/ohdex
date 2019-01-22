@@ -7,7 +7,10 @@
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "relayer": "ts-node zeroknowledge/relayer",
-    "build:zkp": "circom zeroknowledge/circomlib/test/circuits/eddsa_test.circom -o eddsa_test.json -v"
+    "build:zkp": "circom zeroknowledge/circomlib/test/circuits/eddsa_test.circom -o eddsa_test.json -v",
+    "zkp:setup": "snarkjs setup -c eddsa_test.json",
+    "zkp:solidity_verifier:generate": "snarkjs generateverifier -c eddsa_test.json",
+    "zkp:solidity_verifier:sample": "snarkjs generatecall verifier.sol"
   },
   "author": "",
   "license": "ISC",
@@ -36,6 +39,7 @@
     "ts-mocha": "^2.0.0",
     "ts-node": "^7.0.1",
     "typescript": "^3.2.4",
+    "winston": "^3.1.0",
     "yarn": "^1.13.0"
   }
 }

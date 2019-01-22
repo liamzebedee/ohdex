@@ -31,6 +31,7 @@ const path = require('path')
 const bigInt = snarkjs.bigInt;
 const eddsa = require('../zeroknowledge/circomlib/src/eddsa');
 const babyJub = require("../zeroknowledge/circomlib/src/babyjub");
+const fs = require('fs')
 
 function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Partial<TxData>] {
     let json = require(`../build/contracts/${name}.json`);
@@ -156,7 +157,7 @@ describe('hecticism', function() {
     let accounts;
     let user;
 
-    this.timeout(20000)
+    this.timeout(200000000)
 
     setup(async () => {
         pe = new Web3ProviderEngine();
@@ -239,13 +240,6 @@ describe('hecticism', function() {
         // );
         // console.log(sig)
 
-        
-
-        // let msg = buffer2bits(msgBuf)
-
-        // let prvKey = eddsa.cratePrvKey();
-        // let pubKey = eddsa.prv2pub(prvKey);
-
 
 
         
@@ -257,10 +251,9 @@ describe('hecticism', function() {
 
         let msg = msgBuf;
         let pSignature = new Signer(prvKey).sign(msg)
-        // new Signer(prvKey).signMimc(msg)
 
         console.log(path.join(__dirname, "../zeroknowledge/circomlib", "test", "circuits", "eddsa_test.circom"))
-        // const cirDef = await compiler(path.join(__dirname, "../zeroknowledge/circomlib", "test", "circuits", "eddsa_test.circom"));
+        // const cirDef = await compiler(path.join(__dirname, "../zeroknowledge/circomlib", "test", "circuits", "eddsa_test.circom")); 
         let circuit = new snarkjs.Circuit(
             require("../eddsa_test.json")
         );
@@ -270,11 +263,21 @@ describe('hecticism', function() {
         const sBits = buffer2bits(pSignature.slice(32, 64));
         const aBits = buffer2bits(pPubKey);
 
-        const w = circuit.calculateWitness({A: aBits, R8: r8Bits, S: sBits, msg: msgBits});
+        const witness = circuit.calculateWitness({A: aBits, R8: r8Bits, S: sBits, msg: msgBits});
 
-        assert(circuit.checkWitness(w));
+        assert(circuit.checkWitness(witness));
+        
+        const { stringifyBigInts, unstringifyBigInts } = require('snarkjs/src/stringifybigint.js')
+        const proving_key = unstringifyBigInts(JSON.parse(fs.readFileSync(__dirname+"/../proving_key.json", "utf8")))
 
-
+        console.time('generating-proof')
+        const { proof, publicSignals } = snarkjs.original.genProof(
+            proving_key, 
+            witness
+        );
+        console.timeEnd('generating-proof')
+        fs.writeFileSync("proof.json", JSON.stringify(stringifyBigInts(proof), null, 1), "utf-8");
+        fs.writeFileSync("public.json", JSON.stringify(stringifyBigInts(publicSignals), null, 1), "utf-8");
         
     })
 
@@ -311,9 +314,17 @@ describe('hecticism', function() {
         const sBits = buffer2bits(pSignature.slice(32, 64));
         const aBits = buffer2bits(pPubKey);
 
-        const w = circuit.calculateWitness({A: aBits, R8: r8Bits, S: sBits, msg: msgBits});
+        const witness = circuit.calculateWitness({A: aBits, R8: r8Bits, S: sBits, msg: msgBits});
 
-        assert(circuit.checkWitness(w));
+        assert(circuit.checkWitness(witness));
+
+        
+        const vk_proof = JSON.parse(fs.readFileSync("eddsa_test.vk_proof", "utf8"));
+
+        const {proof, publicSignals} = snarkjs.genProof(vk_proof, witness);
+
+        
+        
     })
 
     teardown(() => {
