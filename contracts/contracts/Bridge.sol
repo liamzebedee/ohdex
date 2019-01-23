@@ -1,10 +1,9 @@
 pragma solidity ^0.5.0;
 
-
 import "./EventListener.sol";
 import "./EventEmitter.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol" as Token;
+import "./BridgedToken.sol";
+import "./BridgedToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./libs/LibEvent.sol";
 
@@ -21,6 +20,7 @@ contract Bridge is Ownable {
     }
 
     mapping(uint256 => Network) networks;
+    mapping(bytes32 => bool) public processedEvents;
 
     constructor(uint256 _chainId, address _eventListener, address _eventEmitter) public {
         chainId = _chainId;
@@ -30,32 +30,61 @@ contract Bridge is Ownable {
 
     }
     
-    function claim(address _receiver, address _token, address _amount, address _salt, uint256 _chainId, uint256 _period, bytes32[] _proof) public {
-        // eventEmitter.emitEvent(abi.encodePacked(msg.sender, _token, _amount, _salt));
-        // GO ON HERE
-        bytes32 leaf = keccak256();
+    function claim(
+        address _receiver,
+        address _token,
+        uint256 _amount,
+        address _salt,
+        uint256 _chainId,
+        uint256 _period,
+        bytes32[] memory _proof ) public {
 
-        eventListener.checkEvent(_chainId, _period, _proof);
         
+        bytes32 eventHash = keccak256(abi.encodePacked(_receiver, _token, _amount, chainId, _salt));
 
+        require(!processedEvents[eventHash], "EVENT_ALREADY_PROCESSED");
+        processedEvents[eventHash] = true;
+
+        bytes32 leaf = keccak256(abi.encodePacked(networks[_chainId].escrowContract, eventHash));
+
+        require(eventListener.checkEvent(_chainId, _period, _proof, leaf), "EVENT_NOT_FOUND");
+        
+        // get or create the token contract
+        BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
+
+        // mint the tokens
+        bridgedToken.mint(_receiver, _amount);
+
+    }
+
+    function bridge(address _token, uint256 _amount, uint256 _chainId, uint256 _salt) public {
+                
+        BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
+
+        bridgedToken.burn(msg.sender, _amount);
+
+        eventEmitter.emitEvent(keccak256(abi.encodePacked(msg.sender, _token, _amount, _chainId, _salt)));
     }
     
     function initNetwork(address _escrowContract, uint256 _chainId) public onlyOwner {
         require(networks[_chainId].escrowContract == address(0), "CHAIN_ALREADY_INITIALISED");
-        networks[_chainId].escrowContract = _escrowCOntract;
+        networks[_chainId].escrowContract = _escrowContract;
     }
     
-    function getBridgedToken(address _token, uint256 _chainId) public { 
-        if(networks[_network].tokenToBridgedToken[_token] != address(0)) {
-            return networks[_network].tokenToBridgedToken[_token];
+    function getBridgedToken(address _token, uint256 _chainId) public returns(address) { 
+
+        // return the contract address if it already exists
+        if(networks[_chainId].tokenToBridgedToken[_token] != address(0)) {
+            return networks[_chainId].tokenToBridgedToken[_token];
         }
 
-        address bridgedTokenAddress = new Token();
+        // Otherwise deploy the contract
+        address bridgedTokenAddress = address(new BridgedToken());
 
-        networks[_network].tokenToBridgedToken[_token] = bridgedTokenAddress;
-        networks[_network].bridgedTokenToToken[_bridgedTokenAddress] = _token;
+        networks[_chainId].tokenToBridgedToken[_token] = bridgedTokenAddress;
+        networks[_chainId].bridgedTokenToToken[bridgedTokenAddress] = _token;
 
-        return networks[_network].tokenToBridgedToken[_token];
+        return networks[_chainId].tokenToBridgedToken[_token];
 
     }
 
