@@ -23,9 +23,9 @@ contract Escrow is Ownable {
         eventEmitter = EventEmitter(_eventEmitter);
     }
 
-    function bridge(uint256 _amount, address _token, uint256 _chainId, uint256 _salt) public {
+    function bridge(uint256 _amount, address _token, address _receiver, uint256 _chainId, uint256 _salt) public {
         require(IERC20(_token).transferFrom(msg.sender, address(this), _amount), "TOKEN_TRANSFER_FAILED");
-        eventEmitter.emitEvent(keccak256(abi.encodePacked(msg.sender, _token, _amount, _chainId, _salt)));
+        eventEmitter.emitEvent(keccak256(abi.encodePacked(_receiver, _token, _amount, _chainId, _salt)));
     }
 
     function initNetwork(address _bridgeContract, uint256 _chainId) public onlyOwner {

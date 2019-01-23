@@ -16,9 +16,10 @@
     "compile-sol": "truffle compile --all",
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "test:EventListener": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/EventListener.spec.ts",
+    "test:Escrow": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/Escrow.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "relayer": "ts-node zeroknowledge/relayer",
-    "testchain": "ganache-cli -a 20 -p 9545"
+    "testchain": "ganache-cli -a 20 -p 9545 --gasLimit 10000000"
   },
   "author": "",
   "license": "ISC",
@@ -50,6 +51,7 @@
     "ts-mocha": "^2.0.0",
     "ts-node": "^7.0.1",
     "typescript": "^3.2.4",
+    "web3": "^1.0.0-beta.37",
     "yarn": "^1.13.0"
   },
   "devDependencies": {
