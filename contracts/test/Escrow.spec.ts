@@ -1,6 +1,6 @@
 import chai, { expect, should } from 'chai';
 import { describe, it, setup, teardown } from 'mocha';
-import { keccak256, bufferToHex } from 'ethereumjs-util';
+import { keccak256, bufferToHex, toBuffer } from 'ethereumjs-util';
 import Web3 from 'web3';
 
 import chaiAsPromised from 'chai-as-promised';
@@ -18,9 +18,17 @@ import {
     EventEmitterEventEmittedEventArgs
 } from '../build/wrappers/event_emitter';
 
+import{
+    EventUtilContract,
+} from '../build/wrappers/event_util';
+
 import {
     EscrowContract
 }  from '../build/wrappers/escrow'
+
+import {
+    BridgeContract
+}   from '../build/wrappers/bridge';
 
 import {
     ERC20MintableContract
@@ -46,6 +54,18 @@ function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Pa
     ]
 }
 
+async function eventsToMerkleProof(events:any[], utilContract:EventUtilContract){
+    const hashes = [];
+
+    for(let i = 0; i < events.length; i ++) {
+        hashes.push(toBuffer(await utilContract.generateBridgeHash.callAsync(events[i].returnValues.origin, events[i].returnValues.eventHash)));
+    }
+
+    const merkleTree = new MerkleTree(hashes);
+
+    return merkleTree;
+}
+
 describe('Escrow', () => {
     let pe, web3, web3V;
     let accounts;
@@ -63,22 +83,27 @@ describe('Escrow', () => {
 
     it('It should work', async () => {
 
-        const chainAId = 0;
-        const chainBId = 1;
+        const chainAId = new BigNumber(0);
+        const chainBId = new BigNumber(1);
+        let eventEmitterAbi = require(`../build/contracts/EventEmitter.json`).abi;
+
 
         const salt = new BigNumber("133713371337420");
+
+        let eventUtil = await EventUtilContract.deployAsync(
+            ...getDeployArgs('EventUtil', pe, user)
+        );
 
         // @ts-ignore
         let eventListenerA = await EventListenerContract.deployAsync(
             ...getDeployArgs('EventListener', pe, user))
         ;
-
-        console.log(eventListenerA.abi);
-        // let eventListenerAV = new web3V.eth.Contract({ name: "eventListenerA"}, eventListenerA.address);
-
         let eventEmitterA = await EventEmitterContract.deployAsync(
             ...getDeployArgs('EventEmitter', pe, user)
         );
+
+        let eventEmitterAV = await new web3V.eth.Contract(eventEmitterAbi, eventEmitterA.address);
+
 
         // @ts-ignore
         let eventListenerB = await EventListenerContract.deployAsync(
@@ -99,6 +124,17 @@ describe('Escrow', () => {
             eventListenerA.address,
             eventEmitterA.address
         );
+        
+        // @ts-ignore
+        let bridge = await BridgeContract.deployAsync(
+            ...getDeployArgs('Bridge', pe, user),
+            chainBId,
+            eventListenerB.address,
+            eventEmitterB.address,
+        )
+
+        // init network A for chain B bridge
+        await bridge.initNetwork.sendTransactionAsync(escrow.address, chainAId);
 
         const bridgeAmount = new BigNumber(1000);
         
@@ -114,10 +150,26 @@ describe('Escrow', () => {
         // bridge tokens
         await escrow.bridge.sendTransactionAsync(bridgeAmount, token.address, user, chainBId, salt, {from: user});
             
-        // let emittedEvents = await eventListenerAV.getPastEvents("EventEmitted");
+        let emittedEvents = await eventEmitterAV.getPastEvents("EventEmitted");
 
-        // console.log(emittedEvents);
+        // generate merkle tree of events that have happened
+        let merkleTree = await eventsToMerkleProof(emittedEvents, eventUtil);
         
+        // submit the merkle root to the event listener contract on chain B
+        await eventListenerB.updateProof.sendTransactionAsync(chainAId, merkleTree.getHexRoot());
+
+        const proof = merkleTree.getHexProof(merkleTree.elements[0]);
+
+        console.log(proof);
+        
+        const bridgedTokenAddress = await bridge.getBridgedToken.callAsync(token.address, chainAId);
+
+        // claim the tokens on chain B
+        await bridge.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainAId, new BigNumber(0), proof);
+        
+        
+
+        console.log(bridgedTokenAddress);
 
     })
 

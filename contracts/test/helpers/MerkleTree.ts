@@ -7,7 +7,7 @@ class MerkleTree {
 
     constructor (elements) {
         // Filter empty strings and hash elements
-        this.elements = elements.filter(el => el).map(el => keccak256(el));
+        this.elements = elements.filter(el => el)//.map(el => keccak256(el));
 
         // Deduplicate elements
         this.elements = this.bufDedup(this.elements);

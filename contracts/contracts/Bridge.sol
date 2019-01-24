@@ -34,7 +34,7 @@ contract Bridge is Ownable {
         address _receiver,
         address _token,
         uint256 _amount,
-        address _salt,
+        uint256 _salt,
         uint256 _chainId,
         uint256 _period,
         bytes32[] memory _proof ) public {
