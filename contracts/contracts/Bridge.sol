@@ -3,7 +3,6 @@ pragma solidity ^0.5.0;
 import "./EventListener.sol";
 import "./EventEmitter.sol";
 import "./BridgedToken.sol";
-import "./BridgedToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./libs/LibEvent.sol";
 
@@ -51,6 +50,8 @@ contract Bridge is Ownable {
         
         // get or create the token contract
         BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
+        // BridgedToken bridgedToken = new BridgedToken();
+        require(address(bridgedToken) != address(0), "INVALID_TOKEN_ADDRESS");
 
         // mint the tokens
         bridgedToken.mint(_receiver, _amount);
@@ -73,7 +74,7 @@ contract Bridge is Ownable {
     
     function getBridgedToken(address _token, uint256 _chainId) public returns(address) { 
 
-        // return the contract address if it already exists
+        // Return the contract address if it already exists
         if(networks[_chainId].tokenToBridgedToken[_token] != address(0)) {
             return networks[_chainId].tokenToBridgedToken[_token];
         }

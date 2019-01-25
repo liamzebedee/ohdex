@@ -19,7 +19,11 @@
     "test:Escrow": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/Escrow.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "relayer": "ts-node zeroknowledge/relayer",
-    "testchain": "ganache-cli -a 20 -p 9545 --gasLimit 10000000"
+    "testchain": "ganache-cli -a 20 -p 9545 --gasLimit 10000000",
+    "remix": "remixd -s . --remix-ide https://remix.ethereum.org",
+    "newTestAccounts": "cd devchain && rm -rf keys && for run in {1..300}; do parity account new --config testnode.toml; done && cd ../ && yarn addTestAccountsToChainSpec",
+    "addTestAccountsToChainSpec": "cd devchain && node scripts/addToSpec.js",
+    "testchain2": "cd devchain && parity --config testnode.toml"
   },
   "author": "",
   "license": "ISC",
@@ -47,6 +51,7 @@
     "openzeppelin-solidity": "^2.1.2",
     "snarkjs": "^0.1.9",
     "source-map-support": "^0.5.10",
+    "toml-js": "^0.0.8",
     "truffle-hdwallet-provider": "^1.0.2",
     "ts-mocha": "^2.0.0",
     "ts-node": "^7.0.1",

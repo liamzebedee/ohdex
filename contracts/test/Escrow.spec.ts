@@ -87,6 +87,8 @@ describe('Escrow', () => {
         const chainBId = new BigNumber(1);
         let eventEmitterAbi = require(`../build/contracts/EventEmitter.json`).abi;
 
+        let bridgedTokenAbi = require(`../build/contracts/BridgedToken.json`).abi;
+
 
         const salt = new BigNumber("133713371337420");
 
@@ -160,16 +162,22 @@ describe('Escrow', () => {
 
         const proof = merkleTree.getHexProof(merkleTree.elements[0]);
 
-        console.log(proof);
+        // console.log(proof);
+        
+        // await bridge.getBridgedToken.sendTransactionAsync(token.address, chainAId);
+        
+
+        // claim the tokens on chain B
+
+        await bridge.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainAId, new BigNumber(0), proof);
         
         const bridgedTokenAddress = await bridge.getBridgedToken.callAsync(token.address, chainAId);
 
-        // claim the tokens on chain B
-        await bridge.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainAId, new BigNumber(0), proof);
-        
-        
+        const bridgedToken = new web3V.eth.Contract(bridgedTokenAbi, bridgedTokenAddress);
 
-        console.log(bridgedTokenAddress);
+        let balance = await bridgedToken.methods.balanceOf(user).call();
+
+        expect(balance).to.equal("1000");
 
     })
 
