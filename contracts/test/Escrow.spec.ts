@@ -115,6 +115,8 @@ describe('Escrow', () => {
             ...getDeployArgs('EventEmitter', pe, user)
         );
 
+        let eventEmitterBV = await new web3V.eth.Contract(eventEmitterAbi, eventEmitterA.address);
+
         let token = await ERC20MintableContract.deployAsync(
             ...getDeployArgs('ERC20Mintable', pe, user)
         );
@@ -137,6 +139,8 @@ describe('Escrow', () => {
 
         // init network A for chain B bridge
         await bridge.initNetwork.sendTransactionAsync(escrow.address, chainAId);
+        // init network B for chain A escrow
+        await escrow.initNetwork.sendTransactionAsync(bridge.address, chainBId);
 
         const bridgeAmount = new BigNumber(1000);
         
@@ -166,7 +170,6 @@ describe('Escrow', () => {
         
         // await bridge.getBridgedToken.sendTransactionAsync(token.address, chainAId);
         
-
         // claim the tokens on chain B
 
         await bridge.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainAId, new BigNumber(0), proof);
@@ -178,6 +181,25 @@ describe('Escrow', () => {
         let balance = await bridgedToken.methods.balanceOf(user).call();
 
         expect(balance).to.equal("1000");
+
+        // Woot that worked! Now bridging back to chain A
+
+        // Call bridge on bridge contract
+
+        await bridge.bridge.sendTransactionAsync(token.address, bridgeAmount, chainAId, salt, {from: user});
+
+        let emittedEventsB = eventEmitterBV.getPastEvents("EventEmitted");
+
+        let merkleTreeB = await eventsToMerkleProof(emittedEventsB, eventUtil);
+        
+        await eventListenerB.updateProof.sendTransactionAsync(chainAId, merkleTreeB.getHexRoot());
+
+        const proofB = merkleTreeB.getHexProof(merkleTree.elements[0]);
+
+        await escrow.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainBId, 0, proofB);
+
+        
+        
 
     })
 
