@@ -13,7 +13,7 @@ contract TokenTest {
     }
 
     function mint() public {
-        BridgedToken(tokenContract).mint2(msg.sender, 100000);    
+        BridgedToken(tokenContract).mint(msg.sender, 100000);    
     }
 
 

@@ -16,6 +16,8 @@ contract Escrow is Ownable {
 
     mapping(uint256 => address) public chainToBridgeContract;
 
+    event TokensBridged(uint256 indexed chainId, address indexed receiver, address indexed token, uint256 amount, uint256 _salt);
+
     constructor(uint256 _chainId, address _eventListener, address _eventEmitter) public {
         chainId = _chainId;
 
@@ -23,8 +25,11 @@ contract Escrow is Ownable {
         eventEmitter = EventEmitter(_eventEmitter);
     }
 
-    function bridge(uint256 _amount, address _token, address _receiver, uint256 _chainId, uint256 _salt) public {
+    function bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
         require(IERC20(_token).transferFrom(msg.sender, address(this), _amount), "TOKEN_TRANSFER_FAILED");
+
+        emit TokensBridged(_chainId, _receiver, _token, _amount, _salt);
+
         eventEmitter.emitEvent(keccak256(abi.encodePacked(_receiver, _token, _amount, _chainId, _salt)));
     }
 
@@ -34,11 +39,11 @@ contract Escrow is Ownable {
     }
 
     function claim(
-        address _receiver,
         address _token,
+        address _receiver,
         uint256 _amount,
-        address _salt,
         uint256 _chainId,
+        uint256 _salt,
         uint256 _period,
         bytes32[] memory _proof ) public {
 
@@ -47,10 +52,10 @@ contract Escrow is Ownable {
         require(!processedEvents[eventHash], "EVENT_ALREADY_PROCESSED");
         processedEvents[eventHash] = true;
 
+        // keccak256(abi.encodePacked(_receiver, _token, _amount, _chainId, _salt)
         bytes32 leaf = keccak256(abi.encodePacked(chainToBridgeContract[_chainId], eventHash));
 
         require(eventListener.checkEvent(_chainId, _period, _proof, leaf), "EVENT_NOT_FOUND");
-
         IERC20(_token).transfer(_receiver, _amount);
     }
 

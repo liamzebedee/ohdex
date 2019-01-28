@@ -137,6 +137,8 @@ describe('Escrow', () => {
             eventEmitterB.address,
         )
 
+        console.log("Contracts deployed");
+
         // init network A for chain B bridge
         await bridge.initNetwork.sendTransactionAsync(escrow.address, chainAId);
         // init network B for chain A escrow
@@ -147,6 +149,7 @@ describe('Escrow', () => {
         // must have some tokens to bridge
         await token.mint.sendTransactionAsync(user, bridgeAmount, {from: user});
 
+        console.log("Bridge A to B");
         
         // A to B bridging process
 
@@ -154,7 +157,7 @@ describe('Escrow', () => {
         await token.approve.sendTransactionAsync(escrow.address, bridgeAmount, {from: user});
         
         // bridge tokens
-        await escrow.bridge.sendTransactionAsync(bridgeAmount, token.address, user, chainBId, salt, {from: user});
+        await escrow.bridge.sendTransactionAsync(token.address, user, bridgeAmount, chainBId, salt, {from: user});
             
         let emittedEvents = await eventEmitterAV.getPastEvents("EventEmitted");
 
@@ -172,7 +175,9 @@ describe('Escrow', () => {
         
         // claim the tokens on chain B
 
-        await bridge.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainAId, new BigNumber(0), proof);
+        //function bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
+
+        await bridge.claim.sendTransactionAsync(token.address, user, bridgeAmount, chainAId, salt, new BigNumber(0), proof);
         
         const bridgedTokenAddress = await bridge.getBridgedToken.callAsync(token.address, chainAId);
 
@@ -186,27 +191,28 @@ describe('Escrow', () => {
 
         // Call bridge on bridge contract
 
-        await bridge.bridge.sendTransactionAsync(token.address, bridgeAmount, chainAId, salt, {from: user});
+        // bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
 
-        let emittedEventsB = eventEmitterBV.getPastEvents("EventEmitted");
+        console.log("Bridging B to A");
+
+        let receipt = await bridge.bridge.sendTransactionAsync(token.address, user, bridgeAmount, chainAId, salt, {from: user});
+
+        console.log("RECEIPT:", receipt);
+
+        let emittedEventsB = await eventEmitterBV.getPastEvents("EventEmitted", {fromBlock: 0});
+        
 
         let merkleTreeB = await eventsToMerkleProof(emittedEventsB, eventUtil);
         
         await eventListenerB.updateProof.sendTransactionAsync(chainAId, merkleTreeB.getHexRoot());
 
-        const proofB = merkleTreeB.getHexProof(merkleTree.elements[0]);
-
-        await escrow.claim.sendTransactionAsync(user, token.address, bridgeAmount, salt, chainBId, 0, proofB);
-
-        
-        
+        const proofB = merkleTreeB.getHexProof(merkleTreeB.elements[0]);
+    
+        receipt = await escrow.claim.sendTransactionAsync(token.address, user, bridgeAmount, chainBId, salt, 0, proofB, {from : user, gas: 4000000});
 
     })
 
     
-
-    
-
     teardown(() => {
         pe.stop();
     })

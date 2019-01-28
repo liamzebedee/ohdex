@@ -21,6 +21,8 @@ contract Bridge is Ownable {
     mapping(uint256 => Network) networks;
     mapping(bytes32 => bool) public processedEvents;
 
+    event TokensBridged(uint256 indexed chainId, address indexed receiver, address indexed token, uint256 amount, uint256 _salt);
+
     constructor(uint256 _chainId, address _eventListener, address _eventEmitter) public {
         chainId = _chainId;
 
@@ -30,11 +32,11 @@ contract Bridge is Ownable {
     }
     
     function claim(
-        address _receiver,
         address _token,
+        address _receiver,
         uint256 _amount,
-        uint256 _salt,
         uint256 _chainId,
+        uint256 _salt,
         uint256 _period,
         bytes32[] memory _proof ) public {
 
@@ -58,13 +60,15 @@ contract Bridge is Ownable {
 
     }
 
-    function bridge(address _token, uint256 _amount, uint256 _chainId, uint256 _salt) public {
+    function bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
                 
         BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
 
         bridgedToken.burn(msg.sender, _amount);
 
-        eventEmitter.emitEvent(keccak256(abi.encodePacked(msg.sender, _token, _amount, _chainId, _salt)));
+        emit TokensBridged(_chainId, _receiver, _token, _amount, _salt);
+
+        eventEmitter.emitEvent(keccak256(abi.encodePacked(_receiver, _token, _amount, _chainId, _salt)));
     }
     
     function initNetwork(address _escrowContract, uint256 _chainId) public onlyOwner {
