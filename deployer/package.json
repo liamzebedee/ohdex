@@ -1,0 +1,20 @@
+{
+  "name": "0dex-deployer",
+  "version": "0.1.0",
+  "main": "index.js",
+  "author": "0dex",
+  "license": "MIT",
+  "scripts": {
+    "deploy:kovan": "NETWORK=kovan yarn deploy",
+    "deploy:rinkeby": "NETWORK=rinkeby yarn deploy",
+    "deploy": "ts-node deploy.ts"
+  },
+  "dependencies": {
+    "0x.js": "^3.0.3",
+    "@0x/subproviders": "^2.1.11",
+    "@0x/web3-wrapper": "^3.2.4",
+    "ts-node": "^8.0.2",
+    "typescript": "^3.2.4",
+    "web3": "^1.0.0-beta.41"
+  }
+}
