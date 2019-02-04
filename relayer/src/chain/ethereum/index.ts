@@ -55,22 +55,24 @@ export class EthereumChainTracker extends ChainTracker {
         // With ethers.js
         // let ethersProvider = new ethers.providers.Web3Provider(this.pe);
         // let ethersProvider = new ethers.providers.JsonRpcProvider(this.conf.rpcUrl);
-        console.log(this.conf.rpcUrl)
         // let randomWallet = ethers.Wallet.createRandom();
         let ethersProvider = new ethers.providers.JsonRpcProvider(this.conf.rpcUrl);
 
-        let eventEmitter = new ethers.Contract(
+        let eventEmitterContract = new ethers.Contract(
                 this.conf.eventEmitterAddress,
                 require('../../../../contracts/build/contracts/EventEmitter.json').abi,
                 // require('../../../../contracts/build/contracts/EventEmitter.json').bytecode,
                 ethersProvider
             )
-            .attach(this.conf.eventEmitterAddress);
+            // .attach(this.conf.eventEmitterAddress);
 
-        ethersProvider.resetEventsBlock(this.lastBlockHash);
+        // ethersProvider.resetEventsBlock(this.lastBlock);
         
-        eventEmitter.on(EventEmitterEvents.EventEmitted, function(origin: string, eventHash: string, ev: any) {
+        let self = this;
+        
+        eventEmitterContract.on(EventEmitterEvents.EventEmitted, function(origin: string, eventHash: string, ev: any) {
             console.log(arguments)
+            self.events.emit('newStateRoot', { stateRoot: 123 });
         })
     }
 
