@@ -25,6 +25,14 @@ import {
     BridgeContract
 }   from '../contracts/build/wrappers/bridge';
 
+import {
+    WETH9Contract
+}   from '../contracts/build/wrappers/weth9';
+
+import {
+    DemoERC20Contract
+}   from '../contracts/build/wrappers/demo_erc20';
+
 const network = process.env.NETWORK;
 
 let completeConfig = require("../config/networks.json");
@@ -106,6 +114,31 @@ async function deploy() {
     config.eventListenerAddress = eventListener.address;
     config.escrowAddress = escrow.address;
     config.bridgeAddress = bridge.address;
+
+    // @ts-ignore
+    let aliceToken = await DemoERC20Contract.deployAsync(
+        ...getDeployArgs('DemoERC20', pe, account),
+        "AliceToken",
+        "ALI",
+        "7",
+        "1000000000"
+    );
+    // @ts-ignore
+    let bobToken = await DemoERC20Contract.deployAsync(
+        ...getDeployArgs('DemoERC20', pe, account),
+        "BobToken",
+        "BOB",
+        "7",
+        "1000000000"
+    );
+
+    // @ts-ignore
+    let weth = await WETH9Contract.deployAsync(
+        ...getDeployArgs('WETH9', pe, account)
+    );
+    config.wethToken = weth.address;
+    config.aliceToken = aliceToken.address;
+    config.bobToken = bobToken.address;
     
     const configPath = require.resolve("../config/networks.json");
     console.log("Writing deployed contracts to config");
