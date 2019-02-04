@@ -1,10 +1,11 @@
-import { EthereumChainTracker } from "./chain/ethereum_tracker";
+import { EthereumChainTracker } from "./chain/ethereum";
 import { ChainTracker } from "./chain/tracker";
-import { ChainConfig } from "./chain/config";
 
 const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
+
+interface ChainConfig {}
 
 export class Relayer {
     chains: ChainTracker[];
@@ -28,14 +29,14 @@ export class Relayer {
 
         this.logger.info('Loading chains...')
 
-        for(let { rpcUrl } of networks) {
+        for(let conf of networks) {
             this.chains.push(
-                new EthereumChainTracker(rpcUrl)
+                new EthereumChainTracker(conf)
             );
         }
 
         for(let chain of this.chains) {
-            chain.connect();
+            chain.start();
         }
     }
 

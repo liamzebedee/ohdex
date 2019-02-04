@@ -13,7 +13,8 @@ interface ChainEvents {
 abstract class IChainTracker extends EventEmitter<ChainEvents> {
     logger: any;
 
-    abstract async connect();
+    abstract async start();
+    abstract async stop();
 }
 
 const winston = require('winston');
