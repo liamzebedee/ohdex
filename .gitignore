@@ -3,3 +3,4 @@ contracts/.DS_Store
 contracts/devchain/keys
 *node_modules
 deployer/yarn-error.log
+**/yarn.lock
