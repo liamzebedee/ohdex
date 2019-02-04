@@ -26,29 +26,8 @@ function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Pa
     ]
 }
 
-const promiseTimeout = function(ms, promise){
-
-    // Create a promise that rejects in <ms> milliseconds
-    let timeout = new Promise((resolve, reject) => {
-      let id = setTimeout(() => {
-        clearTimeout(id);
-        reject('Timed out in '+ ms + 'ms.')
-      }, ms)
-    })
-  
-    // Returns a race between our timeout and the passed in promise
-    return Promise.race([
-      promise,
-      timeout
-    ])
-  }
-
 describe('EthereumChainTracker', function(){
     this.timeout(5000)
-
-    // deploy a test chain
-    // deploy the event emitter
-    // test that it gets the events correctly
 
     let pe, web3;
     let accounts;
@@ -89,8 +68,5 @@ describe('EthereumChainTracker', function(){
         );  
 
         expect(called).to.eventually.be.fulfilled;
-
-        // expect(called.should.be.fulfilled, "event not emitted").to.be.eventually.fulfilled;
-        // await called;
     })
 })

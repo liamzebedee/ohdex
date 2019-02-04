@@ -18,7 +18,7 @@ export class EthereumChainTracker extends ChainTracker {
     web3;
 
     constructor(conf: any) {
-        super("Ethereum");
+        super(`Ethereum (chainId=${conf.chainId})`);
         this.conf = conf;
 
         this.lastBlock = 0;
@@ -58,6 +58,9 @@ export class EthereumChainTracker extends ChainTracker {
         // let randomWallet = ethers.Wallet.createRandom();
         let ethersProvider = new ethers.providers.JsonRpcProvider(this.conf.rpcUrl);
 
+        let blockNum = await ethersProvider.getBlockNumber()
+        this.logger.info(`Sync'd to block #${blockNum}`)
+
         let eventEmitterContract = new ethers.Contract(
                 this.conf.eventEmitterAddress,
                 require('../../../../contracts/build/contracts/EventEmitter.json').abi,
@@ -70,9 +73,8 @@ export class EthereumChainTracker extends ChainTracker {
         
         let self = this;
         
-        eventEmitterContract.on(EventEmitterEvents.EventEmitted, function(origin: string, eventHash: string, ev: any) {
-            console.log(arguments)
-            self.events.emit('newStateRoot', { stateRoot: 123 });
+        eventEmitterContract.on(EventEmitterEvents.EventEmitted, function(origin: string, eventHash: string, ev: ethers.Event) {
+            self.events.emit('newStateRoot', { stateRoot: ev.blockNumber });
         })
     }
 

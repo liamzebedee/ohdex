@@ -1,7 +1,6 @@
 import { BlockWithTransactionData } from "ethereum-protocol";
 import { EventEmitter } from "../declarations";
-
-const EventEmitter = require("events");
+const eventEmitter = require("events");
 
 interface NewStateRootEvent extends Event {
     stateRoot: string;
@@ -27,7 +26,7 @@ abstract class ChainTracker extends IChainTracker {
     constructor(chainLabel: string) {
         super();
 
-        this.events = new EventEmitter();
+        this.events = new eventEmitter();
         this.logger = winston.loggers.add(`chaintracker-${chainLabel}`, {
             format: require('../logger').logFormat([
                 label({ label: chainLabel })
