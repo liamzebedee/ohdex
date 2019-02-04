@@ -1,0 +1,38 @@
+{
+    "scripts": {
+        "start": "ts-node src/index.ts"
+    },
+    "dependencies": {
+        "0x.js": "^3.0.3",
+        "@0x/abi-gen-templates": "^1.0.2",
+        "@0x/base-contract": "^3.0.13",
+        "@0x/sol-compiler": "^2.0.2",
+        "@0x/subproviders": "^2.1.11",
+        "@0x/utils": "^3.0.1",
+        "@0x/web3-wrapper": "^3.2.4",
+        "@0xproject/abi-gen": "^1.0.13",
+        "@types/ethereumjs-util": "^5.2.0",
+        "@types/lodash": "^4.14.120",
+        "@types/mocha": "^5.2.5",
+        "add": "^2.0.6",
+        "chai": "^4.2.0",
+        "circom": "^0.0.24",
+        "ethereum-types": "^1.1.6",
+        "ethereumjs-util": "^6.0.0",
+        "ethers": "^4.0.21",
+        "lodash": "^4.17.11",
+        "make-promises-safe": "^4.0.0",
+        "mocha": "^5.2.0",
+        "openzeppelin-solidity": "^2.1.2",
+        "snarkjs": "^0.1.9",
+        "source-map-support": "^0.5.10",
+        "toml-js": "^0.0.8",
+        "truffle-hdwallet-provider": "^1.0.2",
+        "ts-mocha": "^2.0.0",
+        "ts-node": "^7.0.1",
+        "typescript": "^3.2.4",
+        "web3": "^1.0.0-beta.37",
+        "winston": "^3.2.1",
+        "yarn": "^1.13.0"
+    }
+}

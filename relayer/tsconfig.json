@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "es2018",
+            "es2017.object",
+            "es2017"
+        ],
+        "typeRoots": [
+          "node_modules/@0x/typescript-typings/types",
+          "node_modules/@types"
+        ],
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "module": "commonjs",
+    }
+}
