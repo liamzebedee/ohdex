@@ -99,7 +99,9 @@ async function deploy() {
         eventListener.address,
         eventEmitter.address,
     )
+    
 
+    config.eventUtilAddress = eventUtil.address;
     config.eventEmitterAddress = eventEmitter.address;
     config.eventListenerAddress = eventListener.address;
     config.escrowAddress = escrow.address;

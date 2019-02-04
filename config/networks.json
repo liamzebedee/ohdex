@@ -2,21 +2,23 @@
     "kovan": {
         "chainId": 42,
         "rpcUrl": "https://kovan.infura.io/v3/076b582fd6164444af0b426614496e15",
-        "eventEmitterAddress": "0xcf66899b6aae4e44577267737ccb8a8ca912ed41",
-        "eventListenerAddress": "0x5ed71c0f424e559b1296768bd51eec12a9eb2733",
-        "escrowAddress": "0x8309db9a59f90906c4dddae39c0c332b63de8ce3",
-        "bridgeAddress": "0x62392827a6aba48bceef1dd433f44d5909b6feb9",
+        "eventEmitterAddress": "0x626b079442f7f55a84c01a3dca4dbf70178c362a",
+        "eventListenerAddress": "0x78accc40c59f000d9bf78387a2ca910bbeb81fd5",
+        "escrowAddress": "0xe246df5e69fe39e41717911ba29e14c131d262a3",
+        "bridgeAddress": "0x6b348377323010a83ca869f865dd5071b418f632",
         "confirmationsNeeded": 1,
-        "batchSize": 1
+        "batchSize": 1,
+        "eventUtilAddress": "0xb532f24ef1590b45ec598d187ca80661b07dec28"
     },
     "rinkeby": {
         "chainId": 4,
         "rpcUrl": "https://rinkeby.infura.io/v3/076b582fd6164444af0b426614496e15",
-        "eventEmitterAddress": "0x5f728299dbea6538c0415352be79ff7c17cdf16b",
-        "eventListenerAddress": "0x99349f177fa95d5db73cf873b82ba6c79d2254df",
-        "escrowAddress": "0xcb59ba9417ec5e42b1fdaa952e62457bccb65790",
-        "bridgeAddress": "0xe884e20461d741d0925aaffac5d8ea2604f0d215",
+        "eventEmitterAddress": "0x9ff69bd62d2c998b6ec92780d1902f896c8dd161",
+        "eventListenerAddress": "0x24d7fa94e5849b01392c54708402a9ed0a53c061",
+        "escrowAddress": "0x1de47160bcc72832c9b985f02fc0e8a2b36e3205",
+        "bridgeAddress": "0xa50ab77b35df04ae960c393610158102fb63283a",
         "confirmationsNeeded": 1,
-        "batchSize": 1
+        "batchSize": 1,
+        "eventUtilAddress": "0xb54fc4c675d4451e2ad9fe48a1af56cdc94db9ad"
     }
 }
