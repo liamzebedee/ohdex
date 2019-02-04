@@ -5,3 +5,5 @@ contracts/devchain/keys
 *yarn-error.log
 
 bridge-ui/.next
+deployer/yarn-error.log
+**/yarn.lock
