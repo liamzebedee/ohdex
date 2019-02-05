@@ -1,7 +1,9 @@
+import { Button, Grid, Paper, Step, StepLabel, Stepper, withStyles } from '@material-ui/core';
 import React from 'react';
-import { Grid, withStyles, Stepper, Step, StepLabel, Paper } from '@material-ui/core';
 import NetworkPicker from './NetworkPicker';
 import TokenSelector from './TokenSelector';
+import AmountSelector from './AmountSelector';
+import {connect} from 'react-redux';
 
 const styles = (theme:any) => ({
     root : {
@@ -9,26 +11,28 @@ const styles = (theme:any) => ({
     }, 
     paper: {
         padding: theme.spacing.unit * 4,
-        minHeight: "50vh",
+        minHeight: "55vh",
+    },
+    stepContent: {
+        minHeight: "30vh",
     }
 })
 
 
 class TokenBridge extends React.Component<any> {
     
+    state = {
+        currentStep: 0,
+    }
+
     constructor(props:any) {
         super(props);
-        this.state = {
-            currentStep: 0,
-            selectedChain: 1,
-            selectedToken: "",
-        }
-
     }
     
     render(){
         const {classes} = this.props;
         const steps = this.getSteps();
+        const {canContinue} = this.props.bridge;
 
         return(
             <Grid container className={classes.root} spacing={16} justify="center">
@@ -47,7 +51,22 @@ class TokenBridge extends React.Component<any> {
                             })}
                         </Stepper>
 
-                        {this.getStepContent(this.state.currentStep)}
+                        <div className={classes.stepContent}>{this.getStepContent(this.state.currentStep)} </div>
+                        <Grid
+                            justify="space-between" // Add it here :)
+                            container 
+                            spacing={24}
+                        >   
+
+                            <Grid item>
+                                {this.state.currentStep != 0 && <Button onClick={this.handleBack} variant="outlined" color="primary">Back</Button>}
+                            </Grid>
+
+                            <Grid item>
+                                {canContinue && <Button onClick={this.handleNext} variant="contained" color="primary">Continue</Button>}
+                            </Grid>
+                        </Grid>
+                        
                     </Paper>
                 </Grid>
             </Grid>
@@ -67,11 +86,11 @@ class TokenBridge extends React.Component<any> {
     getStepContent = (step:number) => {
         switch (step) {
           case 0:
-            return <NetworkPicker nextFunction={this.handleNext} drizzleState={this.props.drizzleState} />;
+            return <NetworkPicker drizzleState={this.props.drizzleState} />;
           case 1:
-            return <TokenSelector />;
+            return <TokenSelector drizzle={this.props.drizzle} drizzleState={this.props.drizzleState} />;
           case 2:
-            return 'Step 3: This is the bit I really care about!';
+            return <AmountSelector drizzle={this.props.drizzle} drizzleState={this.props.drizzleState}/>;
           default:
             return 'Unknown step';
         }
@@ -82,6 +101,16 @@ class TokenBridge extends React.Component<any> {
             currentStep: prevState.currentStep + 1
         }))
     }
+
+    handleBack = (event) => {
+        this.setState((prevState) => ({
+            currentStep: prevState.currentStep - 1
+        }))
+    }
 }
 
-export default withStyles(styles)(TokenBridge)
+const styledTokenBridge = withStyles(styles)(TokenBridge);
+
+export default connect(state => ({
+    bridge: state.bridge,
+}))(styledTokenBridge);

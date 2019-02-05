@@ -1,65 +1,60 @@
 import React from 'react';
 import {FormControl, InputLabel, Select, MenuItem, withStyles, Typography, Button} from '@material-ui/core';
 import networks from "../../../../../config/networks";
+import {connect} from 'react-redux';
+import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
 
 
 const styles = (theme:any) => ({
-    root : {
-        height: "100%",
-        position: "relative",
-        marginBottom: theme.spacing.unit * 10,
-    },
     formControl : {
-       width: "100%",
+        width: "100%",
     },
-    nextButton: {
-        // position: "absolute",
-        // right: 0,
-        // bottom: 0,
+    spacer : {
+        marginBottom: theme.spacing.unit * 4
     }
 })
 
 
 class NetworkPicker extends React.Component<any> {
 
+    state = {
+        currentChain: 0,
+    }
+
     constructor(props:any){
         super(props);
-        this.state = {
-            selectedChain: 0,
-            currentChain: 0,
-        }
     }
 
     componentDidMount() {
 
         const currentChainId = this.props.drizzleState.web3.networkId;
 
-        if(this.getChainSupported(currentChainId)) {
-            this.setState({
-                selectedChain: currentChainId
-            });
-        }
+        this.firstRender();
 
         this.setState({
             currentChain: currentChainId
         })
     }
 
+
+
     render() {
         const {classes} = this.props;
         const chains = this.getChains();
-        const {currentChain, selectedChain} = this.state;
+        const {currentChain} = this.state;
+
+        const {chainA, chainB} = this.props.bridge;
 
         return (
             <div className={classes.root}>
                 <FormControl className={classes.formControl}>
-                    <InputLabel htmlFor="network">Select Chain</InputLabel>
+                    <InputLabel htmlFor="network">Select Origin Chain</InputLabel>
                     <Select
-                        value={this.state.selectedChain}
-                        onChange={this.handleChange('selectedChain')}
+                        value={chainA}
+                        onChange={this.handleChange('chainA')}
                         inputProps={{
-                        name: 'selected-chain',
-                        id: 'selected-chain',
+                        name: 'selected-chain-a',
+                        id: 'selected-chain-a',
                         }}
                     >   
                         {
@@ -68,26 +63,95 @@ class NetworkPicker extends React.Component<any> {
                             })
                         }
                     </Select>
+
+                    
                 </FormControl>
 
-                {currentChain == selectedChain && 
-                    <>
-                        <Typography>Metamask is set up to the same network as you selected. If you want to bridge a token from the selected network press the button below.</Typography>
-                        <Button className={classes.nextButton} onClick={this.props.nextFunction} variant="contained" color="primary">Next Step</Button>
-                    </>
+                
+                {currentChain == chainA && 
+                    <Typography>Metamask is set up to the same network as you selected. If you want to bridge a token from the selected network press the button below.</Typography>
                 }
 
-                {currentChain != selectedChain && 
+                {currentChain != chainA && 
                     <Typography>Please select the network from which you like to bridge your tokens and also select this network in Metamask.</Typography>
                 }
+
+                <div className={classes.spacer}></div>
+
+
+                <FormControl className={classes.formControl}>
+                    <InputLabel htmlFor="network">Select Destination Chain</InputLabel>
+                    <Select
+                        value={chainB}
+                        onChange={this.handleChange('chainB')}
+                        inputProps={{
+                        name: 'selected-chain-b',
+                        id: 'selected-chain-b',
+                        }}
+                    >   
+                        {
+                            chains.map((network) => {
+                                return <MenuItem key={network.chainId} value={network.chainId}>{network.name}</MenuItem>
+                            })
+                        }
+                    </Select>
+
+                    
+                </FormControl>
+
+                <Typography>Select the chain on which you would like to receive the tokens</Typography>
+
+                <div className={classes.spacer}></div>
+
+                
             </div>
         );
     }
 
-    handleChange = (propName:string) => (event:any) => {
+    firstRender = async () => {
+        const currentChainId = this.props.drizzleState.web3.networkId;
+
+        if(this.getChainSupported(currentChainId)) {
+            await this.props.dispatch({
+                type: bridgeActionTypes.SET_CHAIN_A,
+                chainId: currentChainId
+            })
+            this.setCanContinue();
+        }
+    }
+
+    setCanContinue = () => {
+        const {currentChain} = this.state;
+        const {chainA, chainB} = this.props.bridge;
+
+        const canContinue = currentChain == chainA && chainA != chainB && this.getChainSupported(chainA) && this.getChainSupported(chainB);
+
+        this.props.dispatch({
+            type: bridgeActionTypes.SET_CAN_CONTINUE,
+            canContinue
+        })
+            
+    }
+
+    handleChange =  (propName:string) => async (event:any) => {
         this.setState({
             [propName]: event.target.value
         });
+
+        let type;
+
+        if(propName == "chainA") {
+            type = bridgeActionTypes.SET_CHAIN_A
+        } else {
+            type = bridgeActionTypes.SET_CHAIN_B
+        }
+
+        await this.props.dispatch({
+            type,
+            chainId: event.target.value
+        })
+        
+        this.setCanContinue();
     };
 
     getChains = () => {
@@ -114,9 +178,11 @@ class NetworkPicker extends React.Component<any> {
         return false;
     }
 
-
-
 }
 
 
-export default withStyles(styles)(NetworkPicker);
+const styledNetworkPicker =  withStyles(styles)(NetworkPicker);
+
+export default connect(state => ({
+    bridge: state.bridge,
+}))(styledNetworkPicker);

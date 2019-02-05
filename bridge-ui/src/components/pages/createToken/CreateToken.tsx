@@ -93,7 +93,6 @@ class TokenBridge extends React.Component<any> {
         this.setState({
             [propName]: event.target.value
         });
-        console.log("update");
     };
 
 }
