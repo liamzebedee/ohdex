@@ -14,6 +14,8 @@ library MerkleProof {
      * @param leaf Leaf of Merkle tree
      */
     function verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) internal pure returns (bool) {
+        int BRANCH_PREFIX = 0x1;
+        
         bytes32 computedHash = leaf;
 
         for (uint256 i = 0; i < proof.length; i++) {
@@ -21,10 +23,10 @@ library MerkleProof {
 
             if (computedHash < proofElement) {
                 // Hash(current computed hash + current element of the proof)
-                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+                computedHash = keccak256(abi.encodePacked(BRANCH_PREFIX, computedHash, proofElement));
             } else {
                 // Hash(current element of the proof + current computed hash)
-                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+                computedHash = keccak256(abi.encodePacked(BRANCH_PREFIX, proofElement, computedHash));
             }
         }
 
