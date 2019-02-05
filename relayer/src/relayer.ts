@@ -5,7 +5,9 @@ const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
 
-interface ChainConfig {}
+interface ChainConfig {
+    chainType: 'ethereum';
+}
 
 export class Relayer {
     chains: ChainTracker[];
@@ -24,7 +26,7 @@ export class Relayer {
         });
     }
 
-     start() {
+    start() {
         let networks: ChainConfig[] = Object.values(require("../../config/networks.json"));
 
         this.logger.info('Loading chains...')
