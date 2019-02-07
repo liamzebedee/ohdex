@@ -49,13 +49,15 @@ async function init() {
 
     console.log("Initiating Escrow");
     try {
-        await escrow.initNetwork.sendTransactionAsync(configB.bridgeAddress, configB.chainId, {from: account, gas: 100000});
+        const txId = await escrow.initNetwork.sendTransactionAsync(configB.bridgeAddress, configB.chainId, {from: account, gas: 100000});
+        await web3.awaitTransactionMinedAsync(txId);
     } catch(e) {
         console.error(e);
     }
-    console.log("Inititiating Bridge");
+    console.log("Initiating Bridge");
     try {
-        await bridge.initNetwork.sendTransactionAsync(configB.escrowAddress, configB.chainId, {from: account, gas:100000});
+        const txId = await bridge.initNetwork.sendTransactionAsync(configB.escrowAddress, configB.chainId, {from: account, gas:100000});
+        await web3.awaitTransactionMinedAsync(txId);
     } catch(e) {
         console.error(e);
     }
