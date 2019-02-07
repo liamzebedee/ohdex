@@ -1,6 +1,7 @@
 {
     "kovan": {
         "chainId": 42,
+        "chainType": "ethereum",
         "rpcUrl": "https://kovan.infura.io/v3/076b582fd6164444af0b426614496e15",
         "eventEmitterAddress": "0x99825b725525fc548d8dc29d3ab7aed9a7391f6a",
         "eventListenerAddress": "0x1bb4e9b98684e9af91e1dc5282b101bfeca0b6bf",
@@ -15,6 +16,7 @@
     },
     "rinkeby": {
         "chainId": 4,
+        "chainType": "ethereum",
         "rpcUrl": "https://rinkeby.infura.io/v3/076b582fd6164444af0b426614496e15",
         "eventEmitterAddress": "0x4fe94f69db1da683c654cd228abd01d1da83cf93",
         "eventListenerAddress": "0x887d848d0a4cf29166e436c1378800bb5cf0fb3e",
