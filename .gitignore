@@ -7,3 +7,4 @@ contracts/devchain/keys
 bridge-ui/.next
 deployer/yarn-error.log
 **/yarn.lock
+contracts/.0x-artifacts

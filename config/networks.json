@@ -1,17 +1,22 @@
 {
     "kovan": {
         "chainId": 42,
+        "chainType": "ethereum",
         "rpcUrl": "https://kovan.infura.io/v3/076b582fd6164444af0b426614496e15",
-        "eventEmitterAddress": "0x626b079442f7f55a84c01a3dca4dbf70178c362a",
-        "eventListenerAddress": "0x78accc40c59f000d9bf78387a2ca910bbeb81fd5",
-        "escrowAddress": "0xe246df5e69fe39e41717911ba29e14c131d262a3",
-        "bridgeAddress": "0x6b348377323010a83ca869f865dd5071b418f632",
+        "eventEmitterAddress": "0xf4fe8555da6964981ff180caf037e96eaf3c611f",
+        "eventListenerAddress": "0x2c2f6b2826b9ef80a9834a5c9d09cfa294e95a46",
+        "escrowAddress": "0x10cd222a12f6ca62e9bd1920677a7e0a07d9feeb",
+        "bridgeAddress": "0x8b62e0c91d0d98421b4d54247f0758ec4ca6dfe8",
         "confirmationsNeeded": 1,
         "batchSize": 1,
-        "eventUtilAddress": "0xb532f24ef1590b45ec598d187ca80661b07dec28"
+        "eventUtilAddress": "0x9fc5da0b20f9d2197cfd53653035ef81abdd7824",
+        "wethToken": "0x9d225ab4a9f49842033e22e48f721183d3bea25e",
+        "aliceToken": "0x149f03e5eba977764ebeeaaca323f6b2e101ca8b",
+        "bobToken": "0x99753785a4a68237fd42b755b4ccfff48a2b2576"
     },
     "rinkeby": {
         "chainId": 4,
+        "chainType": "ethereum",
         "rpcUrl": "https://rinkeby.infura.io/v3/076b582fd6164444af0b426614496e15",
         "eventEmitterAddress": "0x9ff69bd62d2c998b6ec92780d1902f896c8dd161",
         "eventListenerAddress": "0x24d7fa94e5849b01392c54708402a9ed0a53c061",
