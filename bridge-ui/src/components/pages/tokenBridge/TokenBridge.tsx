@@ -3,7 +3,11 @@ import React from 'react';
 import NetworkPicker from './NetworkPicker';
 import TokenSelector from './TokenSelector';
 import AmountSelector from './AmountSelector';
+import TokenReceiver from './TokenReceiver';
 import {connect} from 'react-redux';
+import getConfigValue from '../../../utils/getConfigValue';
+import EscrowABI from '../../../abis/Escrow';
+import BridgeABI from '../../../abis/Bridge';
 
 const styles = (theme:any) => ({
     root : {
@@ -28,6 +32,29 @@ class TokenBridge extends React.Component<any> {
     constructor(props:any) {
         super(props);
     }
+
+    componentDidMount() {
+        const {drizzle} = this.props;
+
+        // On mount add token contract to truffle
+        const Escrow = {
+            contractName: "Escrow",
+            web3Contract: new drizzle.web3.eth.Contract(EscrowABI, getConfigValue(this.props.drizzleState.web3.networkId, 'escrowAddress'))
+        } 
+        
+        drizzle.addContract(Escrow);
+
+
+        // On mount add token contract to truffle
+        const Bridge = {
+            contractName: "Bridge",
+            web3Contract: new drizzle.web3.eth.Contract(BridgeABI, getConfigValue(this.props.drizzleState.web3.networkId, 'bridgeAddress'))
+        } 
+        
+        drizzle.addContract(Bridge);
+
+    }
+
     
     render(){
         const {classes} = this.props;
@@ -92,7 +119,7 @@ class TokenBridge extends React.Component<any> {
           case 2:
             return <AmountSelector drizzle={this.props.drizzle} drizzleState={this.props.drizzleState}/>;
           default:
-            return 'Unknown step';
+            return <TokenReceiver drizzle={this.props.drizzle} drizzleState={this.props.drizzleState}/>;
         }
     }
 
