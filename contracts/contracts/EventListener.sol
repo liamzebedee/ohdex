@@ -1,5 +1,3 @@
-// import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
-
 pragma solidity ^0.5.0;
 
 contract EventListener {
@@ -66,14 +64,19 @@ contract EventListener {
         
         // require(block.timestamp > stateRootUpdated, "BACK_IN_TIME_ERR");
 
-        bytes32 leaf = _hashLeaf(abi.encodePacked(lastStateRoot, lastStateRootUpdated));
+        bytes32 leaf = _hashLeaf(lastStateRoot, bytes32(lastStateRootUpdated));
         // require(MerkleProof.verify(_proof, _newStateRoot, leaf) == true, "STATE_ROOT_PROOF_INCORRECT");
         require(_verify(_proof, _newStateRoot, leaf) == true, "STATE_ROOT_PROOF_INCORRECT");
         
         _updateStateRoot(_newStateRoot);
     }
 
-    function _verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) internal pure returns (bool) {
+    function _hashLeaf(bytes32 a, bytes32 b) public pure returns (bytes32) {
+        bytes1 LEAF_PREFIX = 0x00;
+        return keccak256(abi.encodePacked(LEAF_PREFIX, a, b));
+    }
+
+    function _verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) public pure returns (bool) {
         // Check if the computed hash (root) is equal to the provided root
         return _computeRoot(proof, leaf) == root;
     }
@@ -85,7 +88,7 @@ contract EventListener {
         for (uint256 i = 0; i < proof.length; i++) {
             bytes32 pairNode = proof[i];
 
-            if (node < pairNode) {
+            if (dir) {
                 // Hash(current element of the proof + current computed hash)
                 node = _hashBranch(pairNode, node);
             } else {
@@ -96,8 +99,8 @@ contract EventListener {
 
         return node;
     }
-
-    function _hashLeaf(bytes memory leaf) public pure returns (bytes32) {
+    
+    function _hashLeaf2(bytes32[] memory leaf) public pure returns (bytes32) {
         bytes1 LEAF_PREFIX = 0x00;
         return keccak256(abi.encodePacked(LEAF_PREFIX, leaf));
     }

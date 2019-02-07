@@ -16,13 +16,15 @@
     "compile-sol": "truffle compile --all",
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "test:EventListener": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/EventListener.spec.ts",
+    "test:MerkleTree": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/MerkleTree.spec.ts",
     "test:Escrow": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/Escrow.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "testchain:ganache": "ganache-cli -a 20 -p 9545 --gasLimit 10000000",
     "testchain:parity": "cd devchain && parity --config testnode.toml",
     "remix": "remixd -s . --remix-ide https://remix.ethereum.org",
     "newTestAccounts": "cd devchain && rm -rf keys && for run in {1..300}; do parity account new --config testnode.toml; done && cd ../ && yarn addTestAccountsToChainSpec",
-    "addTestAccountsToChainSpec": "cd devchain && node scripts/addToSpec.js"
+    "addTestAccountsToChainSpec": "cd devchain && node scripts/addToSpec.js",
+    "clean": "rm build/contracts/** && rm build/wrappers/**"
   },
   "author": "",
   "license": "ISC",
