@@ -55,15 +55,15 @@ class MerkleTree {
     return this.layers[this.nLayers - 1][0];
   }
 
-  hashLeaf(leaf: Buffer) {
-    return this.hashFn(Buffer.concat([ LEAF_PREFIX, leaf ]))
+  hashLeaf(leaf: Buffer): Buffer {
+    return hashLeaf(this.hashFn, leaf);
   }
 
-  hashBranch(left, right: Buffer) {
+  hashBranch(left, right: Buffer): Buffer {
     if(left.byteLength != this.hashSizeBytes || right.byteLength != this.hashSizeBytes) {
       throw new Error("branches should be of hash size already");
     }
-    return this.hashFn(Buffer.concat([ BRANCH_PREFIX, left, right ]) )
+    return hashBranch(this.hashFn, left, right)
   }
 
   generateProof(item: Buffer): Buffer[] {
@@ -85,10 +85,12 @@ class MerkleTree {
 
     return proof
   }
-
-  verifyProof(proof: Buffer[], item: Buffer) {
+  
+  verifyProof(proof: Buffer[], leaf: Buffer) {
     // let node = this.hashLeaf(item);
-    let node = this.hashLeaf(item);
+    // let node = this.hashLeaf(item);
+    let node = leaf;
+
     if(proof.length != this.nLayers - 1) throw new Error(`${proof.length} proof nodes, but only ${this.nLayers} layers in tree`)
 
     // node > proof
@@ -159,4 +161,18 @@ class MerkleTree {
 }
 
 
-export { MerkleTree };
+function hashLeaf(hashFn, leaf: Buffer): Buffer {
+  return hashFn(Buffer.concat([ LEAF_PREFIX, leaf ]))
+}
+
+function hashBranch(hashFn, left, right: Buffer): Buffer {
+  return hashFn(Buffer.concat([ BRANCH_PREFIX, left, right ]) )
+}
+
+export { 
+  MerkleTree,
+  hashLeaf,
+  hashBranch,
+  LEAF_PREFIX,
+  BRANCH_PREFIX
+};
