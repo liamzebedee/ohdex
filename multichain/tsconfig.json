@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "outDir": "lib/",
-        
         "lib": [
             "es2018",
             "es2017.object",
@@ -21,6 +20,9 @@
         "declaration": true,
         "declarationMap": true
     },
+    "include": [
+        "src/**/*.ts"
+    ],
     "exclude": [
         "node_modules"
     ]

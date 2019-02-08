@@ -1,5 +1,6 @@
 export interface IChainConfig {
     port: number;
+    chainId: string;
 }
 
 export interface IChain {

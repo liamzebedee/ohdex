@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('make-promises-safe')
 
 // import program from 'commander';
 import { EthereumChain } from './ethereum/chain';
@@ -38,7 +39,11 @@ async function run(cmd) {
     if(!Chain) throw new Error(`Couldn't find chain type ${cmd.chain}`)
 
     let chain: IChain = new Chain();
-    chain.start(conf, accountsConfig)
+    try {
+        await chain.start(conf, accountsConfig)
+    } catch(ex) {
+        console.error(ex)
+    }
 
     process.on('SIGTERM', async () => {
         await chain.stop()
