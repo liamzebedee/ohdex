@@ -25,12 +25,13 @@ export class EthereumChain implements IChain {
             },
             // db_path: resolve(dirname(require.resolve(`../../package.json`)), `db/${conf.chainId}`),
             db_path: dbpath,
+            total_accounts: 100,
             s: "TestRPC is awesome!", // I didn't choose this
-            // gasPrice: 0,
+            gasPrice: 0,
             // gasLimit: 10000000000000000000,
             networkId: 420,
             debug: false,
-            defaultBalanceEther: '1000000000000000000',
+            defaultBalanceEther: '100000000000000000000000000000',
             unlock: [0, 1],
         });
 

@@ -14,7 +14,7 @@ class AccountsConfig implements IAccountsConfig {
     }
 
     static async load(path: string): Promise<AccountsConfig> {
-        let data = require('../../config/test_accounts.json');
+        let data = require(path);
         let addresses = [];
         let providers = [];
 

@@ -50,3 +50,7 @@ async function run(cmd) {
         process.exit(0);
     });
 }
+
+export {
+    run
+}

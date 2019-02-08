@@ -5,3 +5,4 @@ contracts/devchain/keys
 deployer/yarn-error.log
 **/yarn.lock
 contracts/.0x-artifacts
+multichain/db
