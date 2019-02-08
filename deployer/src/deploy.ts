@@ -2,8 +2,6 @@ import Web3 from "web3";
 import { Web3ProviderEngine, RPCSubprovider, BigNumber} from "0x.js";
 import { PrivateKeyWalletSubprovider } from "@0x/subproviders";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
-import { prependListener } from "cluster";
-import {promises as fs} from "fs";
 
 import{
     EventUtilContract,
@@ -57,15 +55,28 @@ function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ st
 
 
 async function deploy(configMgr: ConfigManager) {
-    try {
-        await _deploy(configMgr)
-    } catch(ex) {
-        throw ex
+    let deployments = [];
+    let networks = [];
+
+    if(process.env.NETWORK === 'all') {
+        networks = Object.keys(configMgr.config)
+    } else if(process.env.NETWORK.indexOf(',') > -1) {
+        let parsed = process.env.NETWORK.split(',');
+        networks = Object.keys(configMgr.config).filter(net => parsed.includes(net))
+    } else {
+        networks = [process.env.NETWORK]
     }
+
+    console.log(`Deploying to ${networks.length} neworks`)
+
+    await Promise.all(networks.map(net => {
+        return _deploy(configMgr, net)
+    }));
+
+    configMgr.save()
 }
 
-async function _deploy(configMgr: ConfigManager) {
-    const network = process.env.NETWORK;
+async function _deploy(configMgr: ConfigManager, network: string) {
     const config = configMgr.config[network];
     const privateKey = require("../../config/accounts.json").deployAccountPrivateKey;
 
@@ -151,7 +162,6 @@ async function _deploy(configMgr: ConfigManager) {
     config.aliceToken = aliceToken.address;
     config.bobToken = bobToken.address;
     
-    configMgr.save()
 
     pe.stop();
 }
