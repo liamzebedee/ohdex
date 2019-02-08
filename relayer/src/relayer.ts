@@ -14,6 +14,9 @@ interface ChainConfig {
     chainId: string;
 }
 
+function hexify(buf: Buffer): string {
+    return `0x${buf.toString('hex')}`;
+}
 export class Relayer {
     chains: { [k: string]: ChainTracker };
     logger;
@@ -56,7 +59,7 @@ export class Relayer {
                     Object.values(this.roots),
                     keccak256
                 );
-                this.logger.info(`Computed new state root: ${this.state.root()}`)
+                this.logger.info(`Computed new state root: ${hexify(this.state.root())}`)
             })
         }
 

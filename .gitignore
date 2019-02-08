@@ -6,3 +6,5 @@ deployer/yarn-error.log
 **/yarn.lock
 contracts/.0x-artifacts
 multichain/db
+yarn-error.log
+yarn.lock

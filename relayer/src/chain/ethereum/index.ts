@@ -31,6 +31,11 @@ export class EthereumChainTracker extends ChainTracker {
         this.pe = new Web3ProviderEngine();
         // pe.addProvider(new PrivateKeyWalletSubprovider(privateKey));
         this.pe.addProvider(new RPCSubprovider(this.conf.rpcUrl));
+        // @ts-ignore
+        // this.pe.addProvider(
+            
+        //     new Web3.providers.WebsocketProvider(`ws://localhost:${this.conf.port}`)
+        // )
         this.pe.start()
 
         this.pe.on('error', () => {
@@ -77,36 +82,53 @@ export class EthereumChainTracker extends ChainTracker {
 
         // With ethers.js
         // let ethersProvider = new ethers.providers.Web3Provider(this.pe);
-        // let ethersProvider = new ethers.providers.JsonRpcProvider(this.conf.rpcUrl);
-        // let randomWallet = ethers.Wallet.createRandom();
         let ethersProvider = new ethers.providers.JsonRpcProvider(this.conf.rpcUrl);
+        ethersProvider.polling = true;
+        ethersProvider.pollingInterval = 1000;
+        // let randomWallet = ethers.Wallet.createRandom();
+        
+        // let ethersProvider = new ethers.providers.WebSocketProvider(this.conf.port);
+        // let ethersProvider = new ethers.providers.Web3Provider(
+        //     // @ts-ignore
+        //     // new Web3.providers.WebsocketProvider(`ws://localhost:${this.conf.port}`)
+        //     // pe
+        // )
 
         let blockNum = await ethersProvider.getBlockNumber()
+        this.lastBlockIndex = blockNum;
+        let lastBlock = await ethersProvider.getBlock(blockNum)
+        this.lastBlockhash = lastBlock.hash
+        this.lastBlockTimestamp = lastBlock.timestamp ;
+
         this.logger.info(`Sync'd to block #${blockNum}`)
 
+        this.logger.info(`listening to events on ${this.conf.eventEmitterAddress}`)
         let eventEmitterContract = new ethers.Contract(
-                this.conf.eventEmitterAddress,
-                require('../../../../contracts/build/contracts/EventEmitter.json').abi,
-                // require('../../../../contracts/build/contracts/EventEmitter.json').bytecode,
-                ethersProvider
-            )
-            // .attach(this.conf.eventEmitterAddress);
+            this.conf.eventEmitterAddress,
+            require('../../../../contracts/build/contracts/EventEmitter.json').abi,
+            // require('../../../../contracts/build/contracts/EventEmitter.json').bytecode,
+            ethersProvider
+        )
 
         // ethersProvider.resetEventsBlock(this.lastBlock);
-        
-        this.events.on('eventEmitted', (ev: EventEmittedEvent) => {
-            this.lastBlockIndex = +ev.newChainIndex;
-            this.lastBlockhash = ev.newChainRoot;
-        })
+        // ethersProvider.resetEventsBlock(0);
         
         eventEmitterContract.on(EventEmitterEvents.EventEmitted, async (origin: string, eventHash: string, ev: ethers.Event) => {
             this.logger.info(`event emitted - ${eventHash}`)
             this.events.emit(
                 'eventEmitted', 
-                { eventHash, chainRoot: ev.blockHash, chainRootIndex: ev.blockNumber, chainTimestamp: (await ev.getBlock()).timestamp }
+                { 
+                    eventHash, chainRoot: ev.blockHash, chainRootIndex: ev.blockNumber, 
+                    chainTimestamp: (await ev.getBlock()).timestamp 
+                }
             );
         })
-
+            
+        this.events.on('eventEmitted', (ev: EventEmittedEvent) => {
+            this.lastBlockIndex = +ev.newChainIndex;
+            this.lastBlockhash = ev.newChainRoot;
+        })
+            
         return;
     }
 

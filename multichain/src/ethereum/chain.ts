@@ -20,6 +20,7 @@ export class EthereumChain implements IChain {
         let firstStart = !existsSync(dbpath)
 
         const server = ganache.server({ 
+            ws: true,
             logger: {
                 log: console.log
             },

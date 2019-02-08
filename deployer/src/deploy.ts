@@ -55,7 +55,6 @@ function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ st
 
 
 async function deploy(configMgr: ConfigManager) {
-    let deployments = [];
     let networks = [];
 
     if(process.env.NETWORK === 'all') {
@@ -167,5 +166,6 @@ async function _deploy(configMgr: ConfigManager, network: string) {
 }
 
 export {
+    _deploy,
     deploy
 }
