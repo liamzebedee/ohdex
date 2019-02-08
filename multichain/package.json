@@ -1,7 +1,8 @@
 {
     "name": "multichain",
     "scripts": {
-        "start": "node lib/index",
+        "start": "node lib/index.js",
+        "build": "tsc -B",
         "watch": "tsc -W",
         "ethereum": "multichain run --chain ethereum --name kovan",
         "test": "ts-mocha -p tsconfig.json --require make-promises-safe --bail --exit test/index.spec.ts"

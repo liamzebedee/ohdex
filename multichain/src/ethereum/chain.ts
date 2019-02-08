@@ -13,10 +13,11 @@ export class EthereumChain implements IChain {
                 log: console.log
             },
             s: "TestRPC is awesome!", // I didn't choose this
-            gasPrice: 0,
-            gasLimit: 10000000000000000000,
+            // gasPrice: 0,
+            // gasLimit: 10000000000000000000,
             networkId: 420,
-            defaultBalanceEther: 10000000000000000000000,
+            debug: false,
+            defaultBalanceEther: '100000000000000',
             unlock: [0, 1],
         });
         return new Promise((res, rej) => {
