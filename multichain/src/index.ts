@@ -3,6 +3,7 @@
 // import program from 'commander';
 import { EthereumChain } from './ethereum/chain';
 import { IChainConfig, IChain } from './types';
+import { AccountsConfig } from './accounts';
 
 
 const chains: { [k: string]: any } = {
@@ -26,8 +27,10 @@ require('yargs')
 
 
 
-function run(cmd) {
+async function run(cmd) {
     const config = require('../../config/test_networks.json');
+    const accountsConfig = await AccountsConfig.load('../../config/test_accounts.json')
+
     let conf: IChainConfig = config[cmd.name];
     if(!conf) throw new Error(`Couldn't find config for chain ${cmd.name}`)
 
@@ -35,7 +38,7 @@ function run(cmd) {
     if(!Chain) throw new Error(`Couldn't find chain type ${cmd.chain}`)
 
     let chain: IChain = new Chain();
-    chain.start(conf)
+    chain.start(conf, accountsConfig)
 
     process.on('SIGTERM', async () => {
         await chain.stop()

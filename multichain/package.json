@@ -11,13 +11,13 @@
         "multichain": "./src/index.ts"
     },
     "dependencies": {
-        "0x.js": "^3.0.3",
+        "0x.js": "^4.0.3",
         "@0x/abi-gen-templates": "^1.0.2",
         "@0x/base-contract": "^3.0.13",
         "@0x/sol-compiler": "^2.0.2",
-        "@0x/subproviders": "^2.1.11",
+        "@0x/subproviders": "^3.0.2",
         "@0x/utils": "^3.0.1",
-        "@0x/web3-wrapper": "^3.2.4",
+        "@0x/web3-wrapper": "^4.0.2",
         "@0xproject/abi-gen": "^1.0.13",
         "@types/chai": "^4.1.7",
         "@types/chai-as-promised": "^7.1.0",

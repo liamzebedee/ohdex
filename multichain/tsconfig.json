@@ -17,7 +17,9 @@
         "module": "commonjs",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "declaration": true,
+        "declarationMap": true
     },
     "exclude": [
         "node_modules"
