@@ -1,0 +1,9 @@
+const bridgeActionTypes = {
+    SET_CHAIN_A: 'SET_CHAIN_A',
+    SET_CHAIN_B: 'SET_CHAIN_B',
+    SET_TOKEN_ADDRESS_AND_VALID: 'SET_TOKEN_ADDRESS_AND_VALID',
+    SET_TOKEN_AMOUNT: 'SET_TOKEN_AMOUNT',
+    SET_CAN_CONTINUE: 'SET_CAN_CONTINUE'
+};
+
+export default bridgeActionTypes;

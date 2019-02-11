@@ -3,16 +3,28 @@
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
+  "watch": {
+    "contracts": {
+      "patterns": [
+        "./contracts/contracts/**/*.sol"
+      ],
+      "extensions": "sol"
+    }
+  },
   "scripts": {
+    "watch-sol": "npm-watch compile-sol",
+    "compile-sol": "truffle compile --all",
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
+    "test:EventListener": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/EventListener.spec.ts",
+    "test:MerkleTree": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/MerkleTree.spec.ts",
+    "test:Escrow": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/Escrow.spec.ts",
     "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
-    "relayer": "ts-node zeroknowledge/relayer",
-    "contracts:compile": "truffle compile --quiet",
-    "build:zkp": "circom zeroknowledge/circomlib/test/circuits/eddsa_test.circom -o eddsa_test.json -v",
-    "zkp:setup": "snarkjs setup -c eddsa_test.json",
-    "zkp:solidity_verifier:generate": "snarkjs generateverifier -c eddsa_test.json -v zeroknowledge/contracts/Verifier.sol",
-    "zkp:solidity_verifier:sample": "snarkjs generatecall verifier.sol"
-    
+    "testchain:ganache": "ganache-cli -a 20 -p 9545 --gasLimit 10000000",
+    "testchain:parity": "cd devchain && parity --config testnode.toml",
+    "remix": "remixd -s . --remix-ide https://remix.ethereum.org",
+    "newTestAccounts": "cd devchain && rm -rf keys && for run in {1..300}; do parity account new --config testnode.toml; done && cd ../ && yarn addTestAccountsToChainSpec",
+    "addTestAccountsToChainSpec": "cd devchain && node scripts/addToSpec.js",
+    "clean": "rm build/contracts/** && rm build/wrappers/**"
   },
   "author": "",
   "license": "ISC",
@@ -21,27 +33,40 @@
     "@0x/abi-gen-templates": "^1.0.2",
     "@0x/base-contract": "^3.0.13",
     "@0x/sol-compiler": "^2.0.2",
+    "@0x/sol-trace": "^2.0.1",
     "@0x/subproviders": "^2.1.11",
     "@0x/utils": "^3.0.1",
     "@0x/web3-wrapper": "^3.2.4",
     "@0xproject/abi-gen": "^1.0.13",
+    "@rainblock/merkle-patricia-tree": "^4.0.0",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/ethereumjs-util": "^5.2.0",
     "@types/lodash": "^4.14.120",
     "@types/mocha": "^5.2.5",
     "add": "^2.0.6",
     "chai": "^4.2.0",
     "circom": "^0.0.24",
     "ethereum-types": "^1.1.6",
+    "ethereumjs-util": "^6.0.0",
     "ethers": "^4.0.21",
     "lodash": "^4.17.11",
     "make-promises-safe": "^4.0.0",
+    "merkle-patricia-tree": "^3.0.0",
+    "merkletreejs": "^0.0.22",
     "mocha": "^5.2.0",
     "openzeppelin-solidity": "^2.1.2",
     "snarkjs": "^0.1.9",
     "source-map-support": "^0.5.10",
+    "toml-js": "^0.0.8",
+    "truffle-hdwallet-provider": "^1.0.2",
     "ts-mocha": "^2.0.0",
     "ts-node": "^7.0.1",
     "typescript": "^3.2.4",
-    "winston": "^3.1.0",
+    "web3": "^1.0.0-beta.37",
+    "web3-eth-abi": "^1.0.0-beta.41",
     "yarn": "^1.13.0"
+  },
+  "devDependencies": {
+    "npm-watch": "^0.5.0"
   }
 }

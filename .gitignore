@@ -1,0 +1,10 @@
+
+contracts/.DS_Store
+contracts/devchain/keys
+*node_modules
+*yarn-error.log
+
+bridge-ui/.next
+deployer/yarn-error.log
+**/yarn.lock
+contracts/.0x-artifacts
