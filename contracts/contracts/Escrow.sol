@@ -45,7 +45,8 @@ contract Escrow is Ownable {
         uint256 _chainId,
         uint256 _salt,
         uint256 _period,
-        bytes32[] memory _proof ) public {
+        bytes32[] memory _proof,
+        bool[] memory _proofPaths ) public {
 
         bytes32 eventHash = keccak256(abi.encodePacked(_receiver, _token, _amount, chainId, _salt));
 
@@ -55,7 +56,7 @@ contract Escrow is Ownable {
         // keccak256(abi.encodePacked(_receiver, _token, _amount, _chainId, _salt)
         bytes32 leaf = keccak256(abi.encodePacked(chainToBridgeContract[_chainId], eventHash));
 
-        require(eventListener.checkEvent(_chainId, _period, _proof, leaf), "EVENT_NOT_FOUND");
+        require(eventListener.checkEvent(_chainId, _period, _proof, _proofPaths, leaf), "EVENT_NOT_FOUND");
         IERC20(_token).transfer(_receiver, _amount);
     }
 

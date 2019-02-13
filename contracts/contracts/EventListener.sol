@@ -16,11 +16,12 @@ contract EventListener {
 
     mapping(uint256 => bytes32[]) chainIdToProofs; 
 
-    event StateRootUpdated(bytes32 indexed proof);
+    event StateRootUpdated(bytes32 indexed root);
     event ProofSubmitted(uint256 indexed chainId, bytes32 indexed proof);
 
     constructor() public {
-        _updateStateRoot(hex"0420");
+        bytes32 nonce = keccak256(abi.encodePacked(this, blockhash(1)));
+        _updateStateRoot(nonce);
     }
 
     function _updateStateRoot(bytes32 root) internal {
@@ -39,8 +40,8 @@ contract EventListener {
         // TODO clear events
     }
 
-    function checkEvent(uint256 _chainId, uint256 _period, bytes32[] memory _proof, bytes32 _leaf) public returns(bool) {
-        return _verify(_proof, chainIdToProofs[_chainId][_period], _leaf);
+    function checkEvent(uint256 _chainId, uint256 _period, bytes32[] memory _proof, bool[] memory paths, bytes32 _leaf) public returns(bool) {
+        return _verify(_proof, paths, chainIdToProofs[_chainId][_period], _leaf);
     }
 
     function getProof(uint256 _chainId, uint256 _index) public view returns(bytes32) {
@@ -63,6 +64,7 @@ contract EventListener {
     // TODO only the relayer(s) should be able to update the proof
     function updateStateRoot(
         bytes32[] memory _proof, 
+        bool[] memory _proofPaths,
         bytes32 _newInterchainStateRoot, 
         bytes32 _interchainStateRoot, 
         bytes32 _eventsRoot
@@ -106,7 +108,7 @@ contract EventListener {
 
 
         bytes32 chainLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
-        require(_verify(_proof, _newInterchainStateRoot, chainLeaf) == true, "INTERCHAIN_STATE_ROOT_PROOF_INCORRECT");
+        require(_verify(_proof, _proofPaths, _newInterchainStateRoot, chainLeaf) == true, "INTERCHAIN_STATE_ROOT_PROOF_INCORRECT");
         
         _updateStateRoot(_newInterchainStateRoot);
     }
@@ -116,19 +118,25 @@ contract EventListener {
         return keccak256(abi.encodePacked(LEAF_PREFIX, a, b));
     }
 
-    function _verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) public pure returns (bool) {
+        /**
+     * @dev Verifies a Merkle proof proving the existence of a leaf in a Merkle tree. Assumes that each pair of leaves
+     * and each pair of pre-images are sorted.
+     * @param proof Merkle proof containing sibling hashes on the branch from the leaf to the root of the Merkle tree
+     * @param root Merkle root
+     * @param leaf Leaf of Merkle tree
+     */
+    function _verify(bytes32[] memory proof, bool[] memory paths, bytes32 root, bytes32 leaf) public pure returns (bool) {
         // Check if the computed hash (root) is equal to the provided root
-        return _computeRoot(proof, leaf) == root;
+        return _computeRoot(proof, paths, leaf) == root;
     }
 
-    function _computeRoot(bytes32[] memory proof, bytes32 leaf) public pure returns (bytes32) {        
+    function _computeRoot(bytes32[] memory proof, bool[] memory paths, bytes32 leaf) public pure returns (bytes32) {        
         bytes32 node = leaf;
-        bool dir = node > proof[0];
 
         for (uint256 i = 0; i < proof.length; i++) {
             bytes32 pairNode = proof[i];
 
-            if (dir) {
+            if (paths[i]) {
                 // Hash(current element of the proof + current computed hash)
                 node = _hashBranch(pairNode, node);
             } else {

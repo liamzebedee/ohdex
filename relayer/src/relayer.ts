@@ -68,12 +68,12 @@ export class Relayer {
             
             chain.events.on('eventEmitted', async (ev: EventEmittedEvent) => {                
                 // this.roots[chain.id] = chain.computeStateLeaf()
-                await this.updateStateRoots()
+                await this.updateStateRoots(chain.id)
             })
         });
     }
 
-    async updateStateRoots() {
+    async updateStateRoots(chainId) {
         let roots = {};
         Object.values(this.chains).map(chain => {
             roots[chain.id] = chain.computeStateLeaf()
@@ -85,13 +85,18 @@ export class Relayer {
         );
         this.logger.info(`Computed new interchain state root: ${hexify(state.root())}`)
         
-        let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chain.id)
+        let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chainId)
         let newStateRoot = state.root()
         
         await Promise.all(
             chainsToUpdate.map(chain => {
+                let proof = state.generateProof(roots[chain.id])
+                let leaf = state.findLeaf(roots[chain.id])
+                
+                if(!state.verifyProof(proof, leaf)) throw new Error;
+
                 return chain.updateStateRoot(
-                    state.generateProof(roots[chain.id]),
+                    proof,
                     newStateRoot
                 )
             })

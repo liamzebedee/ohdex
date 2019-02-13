@@ -11,8 +11,8 @@ import { describe, it, setup, teardown } from 'mocha';
 // chai.use(require('chai-eventemitter'))
 import sinon from 'sinon'
 
-import { EventEmitterContract } from "../../contracts/build/wrappers/event_emitter";
-import { EventListenerContract } from "../../contracts/build/wrappers/event_listener";
+import { EventEmitterContract, EventEmitterEvents } from "../../contracts/build/wrappers/event_emitter";
+import { EventListenerContract, EventListenerEvents } from "../../contracts/build/wrappers/event_listener";
 
 import { Relayer } from "../src/relayer";
 import { promisify } from 'util'
@@ -22,6 +22,7 @@ import { AccountsConfig } from '../../multichain/lib/accounts';
 
 // @ts-ignore
 import { keccak256 } from 'ethereumjs-util';
+import { ethers } from "ethers";
 
 
 function getContractArtifact(name: string) {
@@ -105,7 +106,7 @@ class MultichainProviderFactory {
 
         await Promise.all([
             this.connect_(config['kovan']),
-            // this.connect_(config['rinkeby'].rpcUrl)
+            this.connect_(config['rinkeby'])
         ])
     }
 
@@ -193,34 +194,29 @@ describe.only('Relayer', function(){
     
 
         // verify other chain now has new state root
-        // let eventListener = new EventListenerContract(
-        //     getContractArtifact('EventEmitter').abi,
-        //     chain2.config.eventListenerAddress,
-        //     chain2.pe,
-        // )
 
-        // let web3 = new Web3(chain2.web3.getProvider());
-        let web3 = new Web3(chain2.web3.getProvider())
+        let ethersProvider = new ethers.providers.JsonRpcProvider(chain2.config.rpcUrl);
+        ethersProvider.polling = true;
+        ethersProvider.pollingInterval = 1000;
 
-        // @ts-ignore
-        let eventListener = new web3.eth.Contract(
+        let eventListener = new ethers.Contract(
+            chain2.config.eventEmitterAddress,
             getContractArtifact('EventListener').abi,
-            chain2.config.eventEmitterAddress
-        );
+            ethersProvider
+        )
 
-        let stateRootUpdated = await new Promise((res, rej) => {
-            eventListener.events.StateRootUpdated({
-                // fromBlock: current
-            }, (err, ev) => {
-                
+        let stateRootUpdated = new Promise((res, rej) => {
+            eventListener.on(EventListenerEvents.StateRootUpdated, async (root: string, ev: ethers.Event) => {
+                // expect(root).to.eq(relayer.)
+                res(root)
             })
-        })
+        });
+
 
         expect(stateRootUpdated).to.eventually.be.fulfilled;
-
-        
-        
-
+        await new Promise((res,rej) => {
+            setTimeout(res, 10000)
+        })
 
         await multichain.restore()
         await relayer.stop()

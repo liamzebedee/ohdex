@@ -38,7 +38,8 @@ contract Bridge is Ownable {
         uint256 _chainId,
         uint256 _salt,
         uint256 _period,
-        bytes32[] memory _proof ) public {
+        bytes32[] memory _proof,
+        bool[] memory _proofPaths ) public {
 
         
         bytes32 eventHash = keccak256(abi.encodePacked(_receiver, _token, _amount, chainId, _salt));
@@ -48,7 +49,7 @@ contract Bridge is Ownable {
 
         bytes32 leaf = keccak256(abi.encodePacked(networks[_chainId].escrowContract, eventHash));
 
-        require(eventListener.checkEvent(_chainId, _period, _proof, leaf), "EVENT_NOT_FOUND");
+        require(eventListener.checkEvent(_chainId, _period, _proof, _proofPaths, leaf), "EVENT_NOT_FOUND");
         
         // get or create the token contract
         BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));

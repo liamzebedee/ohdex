@@ -113,7 +113,10 @@ describe('EventListener', function() {
             
             // construct new merkle root
             let interchainStateRoot = await eventListener.interchainStateRoot.callAsync();
+            expect(interchainStateRoot).to.equal( `0x`+(Buffer.from(interchainStateRoot.slice(2), 'hex').toString('hex')) );
+
             let eventsRoot = await eventListener.ackdEventsRoot.callAsync()
+            eventsRoot = '0x0000000000000000000000000000000000000000000000000000000000000000'
             console.log([interchainStateRoot, eventsRoot])
 
             let state = {
@@ -124,7 +127,7 @@ describe('EventListener', function() {
                     ).slice(2),
                 'hex'),
                 chainB: Buffer.from('3210', 'hex'),
-                chainC: Buffer.from('3217', 'hex'),
+                // chainC: Buffer.from('3217', 'hex'),
             }
 
             expect(state.chainA.byteLength).to.eq(64);

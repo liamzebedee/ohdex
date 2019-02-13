@@ -7,9 +7,9 @@ import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 import { ChainTracker, EventEmittedEvent } from "../tracker";
 
 import { EventEmitterContract, EventEmitterEvents } from '../../../../contracts/build/wrappers/event_emitter';
-import { EventListenerContract } from '../../../../contracts/build/wrappers/event_listener';
+import { EventListenerContract, EventListenerEvents } from '../../../../contracts/build/wrappers/event_listener';
 import { hexify, dehexify } from "../../utils";
-import { MerkleTree } from "../../../../ts-merkle-tree/src";
+import { MerkleTree, MerkleTreeProof } from "../../../../ts-merkle-tree/src";
 
 // @ts-ignore
 import { keccak256 } from 'ethereumjs-util';
@@ -105,20 +105,21 @@ export class EthereumChainTracker extends ChainTracker {
         // this.lastBlockhash = lastBlock.hash
         // this.lastBlockTimestamp = lastBlock.timestamp;
 
-        this.logger.info(`Sync'd to block #${blockNum}`)
+        this.logger.info(`Sync'd to block #${blockNum}, ${this.pendingEvents.length} pending events`)
         this.logger.info(`stateRoot = ${this.interchainStateRoot.toString('hex')}`)
         this.logger.info(`ackedEventsRoot = ${this.ackdEventsRoot.toString('hex')}`)
-        this.logger.info(`${this.pendingEvents.length} pending events`)
 
         // ethersProvider.resetEventsBlock(this.lastBlock);
         // ethersProvider.resetEventsBlock(0);
+
+
             
-        this.events.on('eventEmitted', (ev: EventEmittedEvent) => {
-            // this.lastBlockIndex = +ev.newChainIndex;
-            // this.lastBlockhash = ev.newChainRoot;
-            // this.lastStateRoot = dehexify(ev.newChainRoot);
-            this.pendingEvents.push(dehexify(ev.eventHash));
-        })
+        // this.events.on('eventEmitted', (ev: EventEmittedEvent) => {
+        //     // this.lastBlockIndex = +ev.newChainIndex;
+        //     // this.lastBlockhash = ev.newChainRoot;
+        //     // this.lastStateRoot = dehexify(ev.newChainRoot);
+        //     this.pendingEvents.push(dehexify(ev.eventHash));
+        // })
             
         return;
     }
@@ -133,6 +134,8 @@ export class EthereumChainTracker extends ChainTracker {
 
         eventEmitterContract.on(EventEmitterEvents.EventEmitted, async (origin: string, eventHash: string, ev: ethers.Event) => {
             this.logger.info(`event emitted - ${eventHash}`)
+            this.pendingEvents.push(dehexify(eventHash));
+
             this.events.emit(
                 'eventEmitted', 
                 { 
@@ -140,6 +143,27 @@ export class EthereumChainTracker extends ChainTracker {
                     chainTimestamp: (await ev.getBlock()).timestamp 
                 }
             );
+        })
+
+
+        let eventListenerContract = new ethers.Contract(
+            this.conf.eventListenerAddress,
+            require('../../../../contracts/build/contracts/EventListener.json').abi,
+            this.ethersProvider
+        )
+
+        eventListenerContract.on(EventListenerEvents.StateRootUpdated, async (root: string, ev: ethers.Event) => {
+            this.logger.info(`state root updated - ${root}`)
+            this.interchainStateRoot = dehexify(root);
+            // this.pendingEvents.push(dehexify(eventHash));
+            // 
+            // this.events.emit(
+            //     'eventEmitted', 
+            //     { 
+            //         eventHash, chainRoot: ev.blockHash, chainRootIndex: ev.blockNumber, 
+            //         chainTimestamp: (await ev.getBlock()).timestamp 
+            //     }
+            // );
         })
     }
 
@@ -162,21 +186,34 @@ export class EthereumChainTracker extends ChainTracker {
     computeStateLeaf(): Buffer {
         let items = this.getStateLeafItems()
         let itemsBuf: Buffer[] = [
-            ...items.map(item => AbiCoder.encodeParameter('uint256', item))
+            ...items.map(item => AbiCoder.encodeParameter('bytes32', item))
         ].map(item => item.slice(2)).map(item => Buffer.from(item, 'hex'))
         return Buffer.concat(itemsBuf)
     }
 
-    async updateStateRoot(proof: Buffer[], newInterchainStateRoot: Buffer): Promise<any> {
+    async updateStateRoot(proof: MerkleTreeProof, newInterchainStateRoot: Buffer): Promise<any> {
         let items = this.getStateLeafItems()
-        let itemArgs: string[] = items.map(item => AbiCoder.encodeParameter('uint256', item))
+        let itemArgs: string[] = items.map(item => AbiCoder.encodeParameter('bytes32', item))
         
-        return this.eventListenerContract.updateStateRoot.sendTransactionAsync(
-            proof.map(hexify), 
-            hexify(newInterchainStateRoot), 
-            itemArgs[0],
-            itemArgs[1]
-        )
+        try {
+            await this.web3Wrapper.awaitTransactionSuccessAsync(
+                await this.eventListenerContract.updateStateRoot.sendTransactionAsync(
+                    proof.proofs.map(hexify), 
+                    proof.paths,
+                    hexify(newInterchainStateRoot), 
+                    itemArgs[0],
+                    itemArgs[1]
+                )
+            )
+        } catch(err) {
+            // console.log(ex)
+            if(err.code == -32000) {
+                this.logger.error(err.data.stack)
+            }
+            this.logger.error(err)
+        }
+
+        return;
     }
 
     async stop() {
