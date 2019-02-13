@@ -1,6 +1,7 @@
 import { EthereumChainTracker } from "../src/chain/ethereum";
 import { Web3ProviderEngine, RPCSubprovider, Provider, BigNumber } from "0x.js";
 import { Web3Wrapper, AbiDefinition, TxData } from "@0x/web3-wrapper";
+import Web3 from 'web3';
 import 'mocha';
 import { expect, should, assert } from 'chai';
 const chai = require('chai')
@@ -11,6 +12,8 @@ import { describe, it, setup, teardown } from 'mocha';
 import sinon from 'sinon'
 
 import { EventEmitterContract } from "../../contracts/build/wrappers/event_emitter";
+import { EventListenerContract } from "../../contracts/build/wrappers/event_listener";
+
 import { Relayer } from "../src/relayer";
 import { promisify } from 'util'
 
@@ -147,7 +150,9 @@ class MultichainProviderFactory {
 describe.only('Relayer', function(){
     this.timeout(35000);
 
-    it('updates state root on other bridges', async() => {
+    it('updates the state root')
+
+    it('updates eventListener.stateroot', async() => {
         let multichain = new MultichainProviderFactory()
         await multichain.connect()
 
@@ -158,7 +163,8 @@ describe.only('Relayer', function(){
         await relayer.start()
 
         // Connect to chain 1
-        let chain1 = multichain.things[0];
+        let [ chain1, chain2 ] = multichain.things;
+
         
         let chain1Pe = new Web3ProviderEngine();
         accountsConf.providers.map(subprovider => chain1Pe.addProvider(subprovider))
@@ -166,11 +172,9 @@ describe.only('Relayer', function(){
         chain1Pe.start()
 
         let chain1Web3 = new Web3Wrapper(chain1Pe)
-
-        console.log(await chain1Web3.getBalanceInWeiAsync('0x103c1c34d0f34b16babfbe205978ca9b4a0a447d'))
+        // await chain1Web3.getBalanceInWeiAsync('0x103c1c34d0f34b16babfbe205978ca9b4a0a447d')
         
         // @ts-ignore
-        console.log('tx to ', chain1.config.eventEmitterAddress)
         let eventEmitter = new EventEmitterContract(
             getContractArtifact('EventEmitter').abi,
             chain1.config.eventEmitterAddress,
@@ -186,11 +190,37 @@ describe.only('Relayer', function(){
         )
 
         await new Promise((res,rej) => setTimeout(res, 2000))
+    
 
-        // get the new blockhash of this chain
-        // get the new state root of the other chain
+        // verify other chain now has new state root
+        // let eventListener = new EventListenerContract(
+        //     getContractArtifact('EventEmitter').abi,
+        //     chain2.config.eventListenerAddress,
+        //     chain2.pe,
+        // )
+
+        // let web3 = new Web3(chain2.web3.getProvider());
+        let web3 = new Web3(chain2.web3.getProvider())
+
+        // @ts-ignore
+        let eventListener = new web3.eth.Contract(
+            getContractArtifact('EventListener').abi,
+            chain2.config.eventEmitterAddress
+        );
+
+        let stateRootUpdated = await new Promise((res, rej) => {
+            eventListener.events.StateRootUpdated({
+                // fromBlock: current
+            }, (err, ev) => {
+                
+            })
+        })
+
+        expect(stateRootUpdated).to.eventually.be.fulfilled;
+
         
-        // relayer.chains["420"]
+        
+
 
         await multichain.restore()
         await relayer.stop()

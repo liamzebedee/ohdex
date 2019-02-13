@@ -7,18 +7,30 @@ import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 import { ChainTracker, EventEmittedEvent } from "../tracker";
 
 import { EventEmitterContract, EventEmitterEvents } from '../../../../contracts/build/wrappers/event_emitter';
+import { EventListenerContract } from '../../../../contracts/build/wrappers/event_listener';
+import { hexify, dehexify } from "../../utils";
+import { MerkleTree } from "../../../../ts-merkle-tree/src";
+
+// @ts-ignore
+import { keccak256 } from 'ethereumjs-util';
+
 const AbiCoder = require('web3-eth-abi').AbiCoder();
 
+type hex = string;
 export class EthereumChainTracker extends ChainTracker {
     conf: any;
-
-    lastBlockhash: string;
-    lastBlockIndex: number;
-    lastBlockTimestamp: number;
 
     pe: Web3ProviderEngine;
     web3Wrapper: Web3Wrapper;
     web3;
+    ethersProvider: ethers.providers.Provider;
+
+    eventListenerContract: EventListenerContract;
+
+    interchainStateRoot: Buffer;
+    ackdEventsRoot: Buffer;
+
+    pendingEvents: Buffer[] = [];
 
     constructor(conf: any) {
         super(`Ethereum (chainId=${conf.chainId})`);
@@ -29,13 +41,7 @@ export class EthereumChainTracker extends ChainTracker {
         this.logger.info('Connecting')
 
         this.pe = new Web3ProviderEngine();
-        // pe.addProvider(new PrivateKeyWalletSubprovider(privateKey));
         this.pe.addProvider(new RPCSubprovider(this.conf.rpcUrl));
-        // @ts-ignore
-        // this.pe.addProvider(
-            
-        //     new Web3.providers.WebsocketProvider(`ws://localhost:${this.conf.port}`)
-        // )
         this.pe.start()
 
         this.pe.on('error', () => {
@@ -60,59 +66,71 @@ export class EthereumChainTracker extends ChainTracker {
             throw ex;
         }
 
+        
+
         this.web3Wrapper = new Web3Wrapper(this.pe);
-        // this.web3 = new Web3(this.pe as any);
+        let accounts = await this.web3Wrapper.getAvailableAddressesAsync();
+        let account = accounts[0];
 
-
-        // accounts = await web3.getAvailableAddressesAsync();
-        // account = accounts[0];
-
-        // With 0x.js
-        // let eventEmitter = new EventEmitterContract(
-        //     require('../../../../contracts/build/contracts/EventEmitter.json').abi,
-        //     this.conf.eventEmitterAddress,
-        //     this.pe
-        // );
-
-        // With Web3.js
-        // let eventEmitter = new this.web3.eth.Contract(
-        //     require('../../../../contracts/build/contracts/EventEmitter.json').abi,
-        //     this.conf.eventEmitterAddress
-        // );
-
-        // With ethers.js
-        // let ethersProvider = new ethers.providers.Web3Provider(this.pe);
         let ethersProvider = new ethers.providers.JsonRpcProvider(this.conf.rpcUrl);
         ethersProvider.polling = true;
         ethersProvider.pollingInterval = 1000;
-        // let randomWallet = ethers.Wallet.createRandom();
-        
-        // let ethersProvider = new ethers.providers.WebSocketProvider(this.conf.port);
-        // let ethersProvider = new ethers.providers.Web3Provider(
-        //     // @ts-ignore
-        //     // new Web3.providers.WebsocketProvider(`ws://localhost:${this.conf.port}`)
-        //     // pe
-        // )
+        this.ethersProvider = ethersProvider;
 
+
+
+        let eventListenerContract = new EventListenerContract(
+            require('../../../../contracts/build/contracts/EventListener.json').abi,
+            this.conf.eventListenerAddress,
+            this.pe,
+            { from: account }
+        )
+        this.eventListenerContract = eventListenerContract;
+
+        this.interchainStateRoot = dehexify(
+            (await this.eventListenerContract.interchainStateRoot.callAsync())
+        )
+
+        // TODO populate from EventEmitter.pendingEvents when ready
+        this.pendingEvents = [];
+        this.ackdEventsRoot = dehexify(
+            (await this.eventListenerContract.ackdEventsRoot.callAsync())
+        )
+        // this.ackdEventsRoot = dehexify('0000000000000000000000000000000000000000000000000000000000000000');
+
+        
         let blockNum = await ethersProvider.getBlockNumber()
-        this.lastBlockIndex = blockNum;
-        let lastBlock = await ethersProvider.getBlock(blockNum)
-        this.lastBlockhash = lastBlock.hash
-        this.lastBlockTimestamp = lastBlock.timestamp ;
+        // let lastBlock = await ethersProvider.getBlock(blockNum)
+        // this.lastBlockIndex = blockNum;
+        // this.lastBlockhash = lastBlock.hash
+        // this.lastBlockTimestamp = lastBlock.timestamp;
 
         this.logger.info(`Sync'd to block #${blockNum}`)
+        this.logger.info(`stateRoot = ${this.interchainStateRoot.toString('hex')}`)
+        this.logger.info(`ackedEventsRoot = ${this.ackdEventsRoot.toString('hex')}`)
+        this.logger.info(`${this.pendingEvents.length} pending events`)
 
+        // ethersProvider.resetEventsBlock(this.lastBlock);
+        // ethersProvider.resetEventsBlock(0);
+            
+        this.events.on('eventEmitted', (ev: EventEmittedEvent) => {
+            // this.lastBlockIndex = +ev.newChainIndex;
+            // this.lastBlockhash = ev.newChainRoot;
+            // this.lastStateRoot = dehexify(ev.newChainRoot);
+            this.pendingEvents.push(dehexify(ev.eventHash));
+        })
+            
+        return;
+    }
+
+    listen() {
         this.logger.info(`listening to events on ${this.conf.eventEmitterAddress}`)
         let eventEmitterContract = new ethers.Contract(
             this.conf.eventEmitterAddress,
             require('../../../../contracts/build/contracts/EventEmitter.json').abi,
-            // require('../../../../contracts/build/contracts/EventEmitter.json').bytecode,
-            ethersProvider
+            this.ethersProvider
         )
 
-        // ethersProvider.resetEventsBlock(this.lastBlock);
-        // ethersProvider.resetEventsBlock(0);
-        
         eventEmitterContract.on(EventEmitterEvents.EventEmitted, async (origin: string, eventHash: string, ev: ethers.Event) => {
             this.logger.info(`event emitted - ${eventHash}`)
             this.events.emit(
@@ -123,27 +141,65 @@ export class EthereumChainTracker extends ChainTracker {
                 }
             );
         })
-            
-        this.events.on('eventEmitted', (ev: EventEmittedEvent) => {
-            this.lastBlockIndex = +ev.newChainIndex;
-            this.lastBlockhash = ev.newChainRoot;
-        })
-            
-        return;
+    }
+
+    getEventsRoot(): Buffer {
+        if(this.pendingEvents.length) {
+            let eventsTree = new MerkleTree(this.pendingEvents, keccak256);
+            return eventsTree.root();
+        } else {
+            return this.ackdEventsRoot;
+        }
+    }
+    
+    getStateLeafItems(): Buffer[] {
+        return [
+            this.interchainStateRoot,
+            this.getEventsRoot()
+        ]
     }
 
     computeStateLeaf(): Buffer {
-        let items = [
-            this.lastBlockhash,
-            this.lastBlockTimestamp
-        ]
+        let items = this.getStateLeafItems()
         let itemsBuf: Buffer[] = [
             ...items.map(item => AbiCoder.encodeParameter('uint256', item))
         ].map(item => item.slice(2)).map(item => Buffer.from(item, 'hex'))
         return Buffer.concat(itemsBuf)
     }
 
+    async updateStateRoot(proof: Buffer[], newInterchainStateRoot: Buffer): Promise<any> {
+        let items = this.getStateLeafItems()
+        let itemArgs: string[] = items.map(item => AbiCoder.encodeParameter('uint256', item))
+        
+        return this.eventListenerContract.updateStateRoot.sendTransactionAsync(
+            proof.map(hexify), 
+            hexify(newInterchainStateRoot), 
+            itemArgs[0],
+            itemArgs[1]
+        )
+    }
+
     async stop() {
         this.pe.stop();
     }
 }
+
+// class EthereumStateUpdater {
+//     chain: IChain;
+
+    // lastStateRoot: Buffer;
+    // lastStateRootUpdated: Buffer;
+
+//     eventListenerContract: EventListenerContract;
+
+//     constructor(chain: IChain, eventListenerContract: EventListenerContract) {
+//         this.chain = chain;
+//     }
+
+    // async updateStateRoot(proof: Buffer[], newStateRoot: Buffer): Promise<any> {
+    //     return this.eventListenerContract.updateStateRoot.sendTransactionAsync(
+    //         proof, newStateRoot, this.lastStateRoot, this.lastStateRootUpdated
+    //     )
+    // }
+
+// }

@@ -1,5 +1,6 @@
 import { BlockWithTransactionData } from "ethereum-protocol";
 import { EventEmitter } from "../declarations";
+import { IChain } from "../../../multichain/lib/types";
 const eventEmitter = require("events");
 
 interface EventEmittedEvent extends Event {
@@ -15,6 +16,7 @@ interface ChainEvents {
 abstract class IChainTracker {
     logger: any;
     events: EventEmitter<ChainEvents>;
+    id: string;
 
     abstract async start(): Promise<any>;
     abstract async stop(): Promise<any>;
@@ -24,15 +26,7 @@ const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
 
-interface IChain {
-    id: string;
-
-    computeStateLeaf(): Buffer;
-}
-
-abstract class ChainTracker extends IChainTracker implements IChain {
-    id: string;
-    
+abstract class ChainTracker extends IChainTracker implements IChain {    
     constructor(chainId: string) {
         super();
         this.id = chainId;
@@ -48,7 +42,11 @@ abstract class ChainTracker extends IChainTracker implements IChain {
         });
     }
 
+    abstract listen();
     abstract computeStateLeaf(): Buffer;
+
+    // abstract getStateRoot(): Buffer;
+    // abstract getInterchainStateRoot(): Buffer;
 }
 
 export {

@@ -18,12 +18,12 @@ function hexify(buf: Buffer): string {
     return `0x${buf.toString('hex')}`;
 }
 export class Relayer {
-    chains: { [k: string]: ChainTracker };
+    chains: { [k: string]: EthereumChainTracker };
     logger;
     config: any;
 
-    roots: { [k: string]: Buffer } = {};
-    state: MerkleTree;
+    // roots: { [k: string]: Buffer } = {};
+    // state: MerkleTree;
 
     constructor(config: any) {
         this.chains = {};
@@ -51,22 +51,54 @@ export class Relayer {
         }
 
         let started = [];
+
         for(let chain of Object.values(this.chains)) {
             started = [ ...started, chain.start() ]
-            chain.events.on('eventEmitted', (ev: EventEmittedEvent) => {
-                this.roots[chain.id] = chain.computeStateLeaf()
-                this.state = new MerkleTree(
-                    Object.values(this.roots),
-                    keccak256
-                );
-                this.logger.info(`Computed new state root: ${hexify(this.state.root())}`)
-            })
         }
 
-        return Promise.all(started)
+        await Promise.all(started)
+
+        // for(let chain of Object.values(this.chains)) {
+        //     this.roots[chain.id] = chain.getStateRoot();
+        // }
+
+        // start state update loop
+        Object.values(this.chains).map(chain => {
+            chain.listen()
+            
+            chain.events.on('eventEmitted', async (ev: EventEmittedEvent) => {                
+                // this.roots[chain.id] = chain.computeStateLeaf()
+                await this.updateStateRoots()
+            })
+        });
     }
 
+    async updateStateRoots() {
+        let roots = {};
+        Object.values(this.chains).map(chain => {
+            roots[chain.id] = chain.computeStateLeaf()
+        });
 
+        let state = new MerkleTree(
+            Object.values(roots),
+            keccak256
+        );
+        this.logger.info(`Computed new interchain state root: ${hexify(state.root())}`)
+        
+        let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chain.id)
+        let newStateRoot = state.root()
+        
+        await Promise.all(
+            chainsToUpdate.map(chain => {
+                return chain.updateStateRoot(
+                    state.generateProof(roots[chain.id]),
+                    newStateRoot
+                )
+            })
+        )
+
+        return state;
+    }
 
     async stop() {
         await Promise.all(Object.values(this.chains).map(chain => chain.stop));

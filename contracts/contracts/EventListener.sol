@@ -1,9 +1,16 @@
 pragma solidity ^0.5.0;
 
 contract EventListener {
-    // bytes32[] stateRoots;
-    bytes32 public stateRoot;
-    uint    public stateRootUpdated;
+    // The interchain state root.
+    bytes32 public interchainStateRoot;
+    bytes32 public ackdEventsRoot;
+    
+    // The last recorded root of this chain on other chains.
+    bytes32 public lastAttestedStateRoot;
+
+
+    // bytes32 public stateRoot;
+    uint public _stateRootUpdated;
 
     mapping(bytes32 => uint) stateRootToChainRoot;
 
@@ -16,16 +23,20 @@ contract EventListener {
         _updateStateRoot(hex"0420");
     }
 
-    // function setGenesis(bytes32 genesisStateRoot) public {
-        
-    // }
-
     function _updateStateRoot(bytes32 root) internal {
         // stateRootToChainRoot[root] = block.timestamp;
         // stateRoots.push(root);
-        stateRoot = root;
-        stateRootUpdated = block.timestamp;
+        // stateRoot = root;
+        // stateRootUpdated = block.timestamp;
+        interchainStateRoot = root;
         emit StateRootUpdated(root);
+
+        _ackPendingEvents();
+    }
+
+    function _ackPendingEvents() internal {
+        ackdEventsRoot = getPendingEventsRoot();
+        // TODO clear events
     }
 
     function checkEvent(uint256 _chainId, uint256 _period, bytes32[] memory _proof, bytes32 _leaf) public returns(bool) {
@@ -45,30 +56,59 @@ contract EventListener {
         emit ProofSubmitted(_chainId, _proof);
     }
 
+    function getPendingEventsRoot() public returns (bytes32) {
+        return 0x5000000000000000000000000000000000000000000000000000000000000000;
+    }
+
     // TODO only the relayer(s) should be able to update the proof
-    function updateStateRoot(bytes32[] memory _proof, bytes32 _newStateRoot, bytes32 lastStateRoot, uint256 lastStateRootUpdated) public {
+    function updateStateRoot(
+        bytes32[] memory _proof, 
+        bytes32 _newInterchainStateRoot, 
+        bytes32 _interchainStateRoot, 
+        bytes32 _eventsRoot
+    ) public {
         // todo
         // ACL for only validators
         // and groupsig
 
         // if the validators attempt to exploit arbitrage of time between chains
         // this proof can be used on all other bridges to shut them down (slashing)
-        bytes1 LEAF_PREFIX = 0x00;
+        
 
         // Prove this new state root is based on the previous state of:
         // a) this chain
         // b) the odex chain
-        require(lastStateRoot == stateRoot, "INCORRECT_STATEROOT");
-        require(_newStateRoot != stateRoot, "STALE_STATEROOT");
-        require(lastStateRootUpdated == stateRootUpdated, "INCORRECT_STATEROOT_UPDATED");
+        // require(_lastInterchainStateRoot == interchainStateRoot, "PREVIOUS_INTERCHAIN_ROOT_INCORRECT");
+        // require(_lastStateRoot == lastAttestedStateRoot, "WRONG_LAST_STATE_ROOT");
+        
+        // require(lastStateRoot == stateRoot, "INCORRECT_STATEROOT");
+        // require(_newStateRoot != stateRoot, "STALE_STATEROOT");
+        // require(lastStateRootUpdated == stateRootUpdated, "INCORRECT_STATEROOT_UPDATED");
+
         
         // require(block.timestamp > stateRootUpdated, "BACK_IN_TIME_ERR");
 
-        bytes32 leaf = _hashLeaf(lastStateRoot, bytes32(lastStateRootUpdated));
-        // require(MerkleProof.verify(_proof, _newStateRoot, leaf) == true, "STATE_ROOT_PROOF_INCORRECT");
-        require(_verify(_proof, _newStateRoot, leaf) == true, "STATE_ROOT_PROOF_INCORRECT");
+
+        // It must reference the previous interchain state root and prove we build upon it.
+        require(_interchainStateRoot == interchainStateRoot, "INVALID_STATE_CHRONOLOGY");
+        require(_newInterchainStateRoot != interchainStateRoot, "HUH");
+
+        // TODO - Verify this chain's events are acknowledged        
+        // bytes32 eventsRoot = MerkleProof.computeRoot(EventEmitter.getPendingEvents());
+        uint events = 0;
+        bytes32 eventsRoot;
+        if(events == 0) {
+            eventsRoot = ackdEventsRoot;
+        } else {
+            eventsRoot = getPendingEventsRoot();
+        }
+        // require(eventsRoot == _eventsRoot, "EVENTS_NOT_ACKNOWLEDGED");
+
+
+        bytes32 chainLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
+        require(_verify(_proof, _newInterchainStateRoot, chainLeaf) == true, "INTERCHAIN_STATE_ROOT_PROOF_INCORRECT");
         
-        _updateStateRoot(_newStateRoot);
+        _updateStateRoot(_newInterchainStateRoot);
     }
 
     function _hashLeaf(bytes32 a, bytes32 b) public pure returns (bytes32) {
