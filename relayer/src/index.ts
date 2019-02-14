@@ -1,6 +1,6 @@
 import { Relayer } from "./relayer";
 
-let relayer = new Relayer()
+let relayer = new Relayer(require("../../config/networks.json"))
 relayer.start()
 
 process.on('SIGTERM', async () => {

@@ -112,18 +112,22 @@ describe('EventListener', function() {
             let eventListener = await EventListenerContract.deployAsync(...getDeployArgs('EventListener', pe, user));
             
             // construct new merkle root
-            let genesisRoot = await eventListener.stateRoot.callAsync();
-            let genesisTime = await eventListener.stateRootUpdated.callAsync()
+            let interchainStateRoot = await eventListener.interchainStateRoot.callAsync();
+            expect(interchainStateRoot).to.equal( `0x`+(Buffer.from(interchainStateRoot.slice(2), 'hex').toString('hex')) );
+
+            let eventsRoot = await eventListener.ackdEventsRoot.callAsync()
+            eventsRoot = '0x0000000000000000000000000000000000000000000000000000000000000000'
+            console.log([interchainStateRoot, eventsRoot])
 
             let state = {
                 chainA: Buffer.from(
                     AbiCoder.encodeParameters(
-                        ['bytes32','uint256'],
-                        [genesisRoot, ""+genesisTime]
+                        ['uint256','uint256'],
+                        [interchainStateRoot, eventsRoot]
                     ).slice(2),
                 'hex'),
                 chainB: Buffer.from('3210', 'hex'),
-                chainC: Buffer.from('3217', 'hex'),
+                // chainC: Buffer.from('3217', 'hex'),
             }
 
             expect(state.chainA.byteLength).to.eq(64);
@@ -136,6 +140,7 @@ describe('EventListener', function() {
             );
 
             let proof = tree.generateProof(items[0]);
+            tree.verifyProof(proof, tree.hashLeaf(items[0]))
 
             let newStateRoot = hexify(tree.root())
 
@@ -143,20 +148,20 @@ describe('EventListener', function() {
                 await eventListener.updateStateRoot.sendTransactionAsync(
                     proof.map(hexify),
                     newStateRoot, 
-                    genesisRoot,
-                    genesisTime
+                    interchainStateRoot,
+                    eventsRoot
                 )
             )
             
             expect(tx).to.be.eventually.fulfilled;
 
-            let stateRoot = await eventListener.stateRoot.callAsync()
-            let stateRootUpdated = ""+(await eventListener.stateRootUpdated.callAsync())
+            let newinterchainStateRoot = await eventListener.interchainStateRoot.callAsync()
+            // let stateRootUpdated = ""+(await eventListener._stateRootUpdated.callAsync())
             
             let lastBlockTimestamp = ""+(await web3.getBlockTimestampAsync('latest'))
 
-            expect(stateRoot).to.eq(newStateRoot);
-            expect(stateRootUpdated).to.eq(lastBlockTimestamp)
+            expect(newStateRoot).to.eq(newinterchainStateRoot);
+            // expect(stateRootUpdated).to.eq(lastBlockTimestamp)
 
             let wait = new Promise((res,rej) => {
                 setTimeout(res, 2000)

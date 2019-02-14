@@ -7,15 +7,18 @@
   "scripts": {
     "deploy:kovan": "NETWORK=kovan yarn deploy",
     "deploy:rinkeby": "NETWORK=rinkeby yarn deploy",
-    "deploy": "ts-node deploy.ts",
+    "deploy:testnets": "NODE_ENV=test NETWORK=all yarn deploy",
+    "redploy:testnets": "NODE_ENV=test NETWORK=all ts-node src/test/index.ts",
+    "deploy": "ts-node src/index.ts",
     "init-contracts:kovan:rinkeby": "NETWORK_A=kovan NETWORK_B=rinkeby yarn init-contracts",
     "init-contracts:rinkeby:kovan": "NETWORK_A=rinkeby NETWORK_B=kovan yarn init-contracts",
-    "init-contracts": "ts-node init.ts"
+    "init-contracts": "ts-node src/init.ts"
   },
   "dependencies": {
     "0x.js": "^3.0.3",
     "@0x/subproviders": "^2.1.11",
     "@0x/web3-wrapper": "^3.2.4",
+    "@types/node": "^10.12.23",
     "ts-node": "^8.0.2",
     "typescript": "^3.2.4",
     "web3": "^1.0.0-beta.41"

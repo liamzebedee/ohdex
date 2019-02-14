@@ -2,52 +2,48 @@ import Web3 from "web3";
 import { Web3ProviderEngine, RPCSubprovider, BigNumber} from "0x.js";
 import { PrivateKeyWalletSubprovider } from "@0x/subproviders";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
-import { prependListener } from "cluster";
-import {promises as fs} from "fs";
 
 import{
     EventUtilContract,
-} from '../contracts/build/wrappers/event_util';
+} from '../../contracts/build/wrappers/event_util';
 
 import {
     EventListenerContract
-} from '../contracts/build/wrappers/event_listener';
+} from '../../contracts/build/wrappers/event_listener';
 
 import {
     EventEmitterContract,
-} from '../contracts/build/wrappers/event_emitter';
+} from '../../contracts/build/wrappers/event_emitter';
 
 import {
     EscrowContract
-}  from '../contracts/build/wrappers/escrow'
+}  from '../../contracts/build/wrappers/escrow'
 
 import {
     BridgeContract
-}   from '../contracts/build/wrappers/bridge';
+}   from '../../contracts/build/wrappers/bridge';
 
 import {
     WETH9Contract
-}   from '../contracts/build/wrappers/weth9';
+}   from '../../contracts/build/wrappers/weth9';
 
 import {
     DemoERC20Contract
-}   from '../contracts/build/wrappers/demo_erc20';
+}   from '../../contracts/build/wrappers/demo_erc20';
+import { ConfigManager } from "./config";
 
-const network = process.env.NETWORK;
-
-let completeConfig = require("../config/networks.json");
-let config = completeConfig[network];
+const assert = require('assert');
 
 
-const privateKey = require("../config/accounts.json").deployAccountPrivateKey;
-
-deploy();
-
-function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Partial<TxData>] {
-    let json = require(`../contracts/build/contracts/${name}.json`);
+function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ string, AbiDefinition[], Provider, Partial<TxData>] {
+    let json = require(`../../contracts/build/contracts/${name}.json`);
     let bytecode = json.bytecode;
     let abi = json.abi;
     let provider = pe;
+
+    assert.ok(bytecode.length > 0)
+    assert.ok(abi.length > 0)
+    assert.ok(from != "")
 
     return [
         bytecode,
@@ -57,13 +53,38 @@ function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Pa
     ]
 }
 
-async function deploy() {
-    let pe, web3;
+
+async function deploy(configMgr: ConfigManager) {
+    let networks = [];
+
+    if(process.env.NETWORK === 'all') {
+        networks = Object.keys(configMgr.config)
+    } else if(process.env.NETWORK.indexOf(',') > -1) {
+        let parsed = process.env.NETWORK.split(',');
+        networks = Object.keys(configMgr.config).filter(net => parsed.includes(net))
+    } else {
+        networks = [process.env.NETWORK]
+    }
+
+    console.log(`Deploying to ${networks.length} neworks`)
+
+    await Promise.all(networks.map(net => {
+        return _deploy(configMgr, net)
+    }));
+
+    configMgr.save()
+}
+
+async function _deploy(configMgr: ConfigManager, network: string) {
+    const config = configMgr.config[network];
+    const privateKey = require("../../config/accounts.json").deployAccountPrivateKey;
+
+    let pe: Web3ProviderEngine, web3: Web3Wrapper;
     let accounts;
     let account;
 
     pe = new Web3ProviderEngine();
-    pe.addProvider(new PrivateKeyWalletSubprovider(privateKey));
+    // pe.addProvider(new PrivateKeyWalletSubprovider(privateKey));
     pe.addProvider(new RPCSubprovider(config.rpcUrl));
     pe.start()
     web3 = new Web3Wrapper(pe);
@@ -140,9 +161,11 @@ async function deploy() {
     config.aliceToken = aliceToken.address;
     config.bobToken = bobToken.address;
     
-    const configPath = require.resolve("../config/networks.json");
-    console.log("Writing deployed contracts to config");
-    fs.writeFile(configPath, JSON.stringify(completeConfig, null, 4));
 
     pe.stop();
+}
+
+export {
+    _deploy,
+    deploy
 }

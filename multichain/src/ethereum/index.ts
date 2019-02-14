@@ -1,0 +1,3 @@
+import {
+    EthereumChain
+} from './chain';

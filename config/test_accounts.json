@@ -1,0 +1,9 @@
+{
+    "*": [
+        {
+            "type": "MnemonicWalletSubprovider",
+            "mnemonic": "concert load couple harbor equip island argue ramp clarify fence dumb topic",
+            "baseDerivationPath": "44'/60'/0'/0"
+        }
+    ]
+}

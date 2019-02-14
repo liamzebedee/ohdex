@@ -1,6 +1,7 @@
 import { EthereumChainTracker } from "../src/chain/ethereum";
-import { Web3ProviderEngine, RPCSubprovider, Provider } from "0x.js";
+import { Web3ProviderEngine, RPCSubprovider, Provider, BigNumber } from "0x.js";
 import { Web3Wrapper, AbiDefinition, TxData } from "@0x/web3-wrapper";
+import Web3 from 'web3';
 import 'mocha';
 import { expect, should, assert } from 'chai';
 const chai = require('chai')
@@ -10,8 +11,23 @@ import { describe, it, setup, teardown } from 'mocha';
 // chai.use(require('chai-eventemitter'))
 import sinon from 'sinon'
 
-import { EventEmitterContract } from "../../contracts/build/wrappers/event_emitter";
+import { EventEmitterContract, EventEmitterEvents } from "../../contracts/build/wrappers/event_emitter";
+import { EventListenerContract, EventListenerEvents } from "../../contracts/build/wrappers/event_listener";
 
+import { Relayer } from "../src/relayer";
+import { promisify } from 'util'
+
+import { AccountsConfig } from '../../multichain/lib/accounts';
+
+
+// @ts-ignore
+import { keccak256 } from 'ethereumjs-util';
+import { ethers } from "ethers";
+
+
+function getContractArtifact(name: string) {
+    return require(`../../contracts/build/contracts/${name}.json`)
+}
 function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Partial<TxData>] {
     let json = require(`../../contracts/build/contracts/${name}.json`);
     let bytecode = json.bytecode;
@@ -54,7 +70,7 @@ describe('EthereumChainTracker', function(){
         let spy = sinon.spy();
 
         let called = new Promise((res, rej) => {
-            tracker.events.prependListener('newStateRoot', () => { 
+            tracker.events.prependListener('eventEmitted', () => { 
                 console.log('root')
                 res()
             });
@@ -72,6 +88,137 @@ describe('EthereumChainTracker', function(){
 })
 
 
-describe('Relayer', function(){
+interface MultichainInfo {
+    pe: Web3ProviderEngine;
+    web3: Web3Wrapper;
+    snapshotId: number;
+    config: any;
+}
+class MultichainProviderFactory {
+    things: MultichainInfo[] = [];
+
+    constructor() {
+
+    }
+
+    async connect() {
+        const config = require('../../config/test_networks.json');
+
+        await Promise.all([
+            this.connect_(config['kovan']),
+            this.connect_(config['rinkeby'])
+        ])
+    }
+
+    async makeProvider(i: number): Promise<Web3ProviderEngine> {
+        let thing = this.things[i]
+
+        let pe = new Web3ProviderEngine();
+        pe.addProvider(new RPCSubprovider(thing.config.rpcUrl))
+
+        return pe;
+    }
+
+    async connect_(config: any) {
+        let rpcUrl = config.rpcUrl;
+        let pe = new Web3ProviderEngine();
+        pe.addProvider(new RPCSubprovider(rpcUrl))
+        pe.start()
+
+        let web3 = new Web3Wrapper(pe);
+        let snapshotId = await web3.takeSnapshotAsync()
+        this.things.push({
+            pe,
+            web3,
+            snapshotId,
+            config,
+        })
+        console.log(`snapshot ${rpcUrl} at ${snapshotId}`)
+        
+        // accounts = await web3.getAvailableAddressesAsync();
+        // user = accounts[0]
+    }
+
+    async restore() {
+        return Promise.all(this.things.map((thing) => {
+            let { web3, snapshotId } = thing;
+            return web3.revertSnapshotAsync(snapshotId)
+        }))
+    }
+}
+
+
+describe.only('Relayer', function(){
+    this.timeout(35000);
+
+    it('updates the state root')
+
+    it('updates eventListener.stateroot', async() => {
+        let multichain = new MultichainProviderFactory()
+        await multichain.connect()
+
+        let accountsConf = await AccountsConfig.load('../../config/test_accounts.json')
+        let testConfig = require('../../config/test_networks.json');
+        
+        let relayer = new Relayer(testConfig)
+        await relayer.start()
+
+        // Connect to chain 1
+        let [ chain1, chain2 ] = multichain.things;
+
+        
+        let chain1Pe = new Web3ProviderEngine();
+        accountsConf.providers.map(subprovider => chain1Pe.addProvider(subprovider))
+        chain1Pe.addProvider(new RPCSubprovider(chain1.config.rpcUrl))
+        chain1Pe.start()
+
+        let chain1Web3 = new Web3Wrapper(chain1Pe)
+        // await chain1Web3.getBalanceInWeiAsync('0x103c1c34d0f34b16babfbe205978ca9b4a0a447d')
+        
+        // @ts-ignore
+        let eventEmitter = new EventEmitterContract(
+            getContractArtifact('EventEmitter').abi,
+            chain1.config.eventEmitterAddress,
+            chain1Pe,
+            { from: '0x103c1c34d0f34b16babfbe205978ca9b4a0a447d' }
+        );
+        
+        // Emit the event
+        let evHash = keccak256('123');
+        
+        await chain1Web3.awaitTransactionSuccessAsync(
+            await eventEmitter.emitEvent.sendTransactionAsync(evHash)
+        )
+
+        await new Promise((res,rej) => setTimeout(res, 2000))
     
+
+        // verify other chain now has new state root
+
+        let ethersProvider = new ethers.providers.JsonRpcProvider(chain2.config.rpcUrl);
+        ethersProvider.polling = true;
+        ethersProvider.pollingInterval = 1000;
+
+        let eventListener = new ethers.Contract(
+            chain2.config.eventEmitterAddress,
+            getContractArtifact('EventListener').abi,
+            ethersProvider
+        )
+
+        let stateRootUpdated = new Promise((res, rej) => {
+            eventListener.on(EventListenerEvents.StateRootUpdated, async (root: string, ev: ethers.Event) => {
+                // expect(root).to.eq(relayer.)
+                res(root)
+            })
+        });
+
+
+        expect(stateRootUpdated).to.eventually.be.fulfilled;
+        await new Promise((res,rej) => {
+            setTimeout(res, 10000)
+        })
+
+        await multichain.restore()
+        await relayer.stop()
+    })
 })

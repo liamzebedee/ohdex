@@ -9,11 +9,11 @@ import {promises as fs} from "fs";
 
 import {
     EscrowContract
-}  from '../contracts/build/wrappers/escrow'
+}  from '../../contracts/build/wrappers/escrow'
 
 import {
     BridgeContract
-}   from '../contracts/build/wrappers/bridge';
+}   from '../../contracts/build/wrappers/bridge';
 
 const networkA = process.env.NETWORK_A;
 const networkB = process.env.NETWORK_B;

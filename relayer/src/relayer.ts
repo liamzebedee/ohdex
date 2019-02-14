@@ -1,20 +1,33 @@
 import { EthereumChainTracker } from "./chain/ethereum";
-import { ChainTracker } from "./chain/tracker";
+import { ChainTracker, EventEmittedEvent } from "./chain/tracker";
 
 const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
 
+import { MerkleTree } from '../../ts-merkle-tree/src';
+// @ts-ignore
+import { keccak256 } from 'ethereumjs-util';
+
 interface ChainConfig {
     chainType: 'ethereum';
+    chainId: string;
 }
 
+function hexify(buf: Buffer): string {
+    return `0x${buf.toString('hex')}`;
+}
 export class Relayer {
-    chains: ChainTracker[];
+    chains: { [k: string]: EthereumChainTracker };
     logger;
+    config: any;
 
-    constructor() {
-        this.chains = [];
+    // roots: { [k: string]: Buffer } = {};
+    // state: MerkleTree;
+
+    constructor(config: any) {
+        this.chains = {};
+        this.config = config;
         
         this.logger = winston.loggers.add(`relayer`, {
             format: require('./logger').logFormat([
@@ -26,23 +39,73 @@ export class Relayer {
         });
     }
 
-    start() {
-        let networks: ChainConfig[] = Object.values(require("../../config/networks.json"));
+    async start() {
+        let networks: ChainConfig[] = Object.values(this.config);
 
         this.logger.info('Loading chains...')
 
         for(let conf of networks) {
-            this.chains.push(
+            this.chains[conf.chainId] = (
                 new EthereumChainTracker(conf)
             );
         }
 
-        for(let chain of this.chains) {
-            chain.start();
+        let started = [];
+
+        for(let chain of Object.values(this.chains)) {
+            started = [ ...started, chain.start() ]
         }
+
+        await Promise.all(started)
+
+        // for(let chain of Object.values(this.chains)) {
+        //     this.roots[chain.id] = chain.getStateRoot();
+        // }
+
+        // start state update loop
+        Object.values(this.chains).map(chain => {
+            chain.listen()
+            
+            chain.events.on('eventEmitted', async (ev: EventEmittedEvent) => {                
+                // this.roots[chain.id] = chain.computeStateLeaf()
+                await this.updateStateRoots(chain.id)
+            })
+        });
+    }
+
+    async updateStateRoots(chainId) {
+        let roots = {};
+        Object.values(this.chains).map(chain => {
+            roots[chain.id] = chain.computeStateLeaf()
+        });
+
+        let state = new MerkleTree(
+            Object.values(roots),
+            keccak256
+        );
+        this.logger.info(`Computed new interchain state root: ${hexify(state.root())}`)
+        
+        let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chainId)
+        let newStateRoot = state.root()
+        
+        await Promise.all(
+            chainsToUpdate.map(chain => {
+                let proof = state.generateProof(roots[chain.id])
+                let leaf = state.findLeaf(roots[chain.id])
+                
+                if(!state.verifyProof(proof, leaf)) throw new Error;
+
+                return chain.updateStateRoot(
+                    proof,
+                    newStateRoot
+                )
+            })
+        )
+
+        return state;
     }
 
     async stop() {
-        await Promise.all(this.chains.map(chain => chain.stop));
+        await Promise.all(Object.values(this.chains).map(chain => chain.stop));
     }
 }
