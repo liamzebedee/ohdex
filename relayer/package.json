@@ -39,6 +39,7 @@
         "ts-mocha": "^2.0.0",
         "ts-node": "^7.0.1",
         "typescript": "^3.2.4",
+        "typescript-solidity-merkle-tree": "^0.2.3",
         "web3": "^1.0.0-beta.37",
         "web3-eth-abi": "^1.0.0-beta.43",
         "winston": "^3.2.1",
