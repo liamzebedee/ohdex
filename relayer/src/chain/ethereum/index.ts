@@ -166,6 +166,7 @@ export class EthereumChainTracker extends ChainTracker {
         eventListenerContract.on(EventListenerEvents.StateRootUpdated, async (root: string, ev: ethers.Event) => {
             this.logger.info(`state root updated - ${root}`)
             this.interchainStateRoot = dehexify(root);
+            this.pendingEvents = [];
         })
     }
 

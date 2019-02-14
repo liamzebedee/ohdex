@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 contract EventEmitter {
     // Events pending acknowledgement on other chains.
-    bytes32[] public pendingEvents;
+    bytes32[] public events;
 
     event EventEmitted(address indexed origin, bytes32 eventHash); 
 
@@ -10,7 +10,7 @@ contract EventEmitter {
     }
 
     function emitEvent(bytes32 _eventHash) public returns(bool) {
-        pendingEvents.push(_eventHash);
+        events.push(_eventHash);
         emit EventEmitted(msg.sender, _eventHash);
         // keccak256(abi.encodePacked(msg.sender, _eventHash)) is whats added to the merkle tree of that chain
         // TODO: Implement fee system
@@ -18,12 +18,12 @@ contract EventEmitter {
     }
 
     function acknowledgeEvents() public {
-        delete pendingEvents;
+        // delete pendingEvents;
     }
 
     function getEventsRoot() public view returns(bytes32) {
-        if(pendingEvents.length == 0) return 0x0;
-        return _computeMerkleRoot(pendingEvents);
+        if(events.length == 0) return 0x0;
+        return _computeMerkleRoot(events);
     }
 
 

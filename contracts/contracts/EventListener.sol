@@ -5,7 +5,7 @@ import "./EventEmitter.sol";
 contract EventListener {
     // The interchain state root.
     bytes32 public interchainStateRoot;
-    bytes32 public ackdEventsRoot;
+    // bytes32 public acknowledgedEventsRoot;
     
     // The last recorded root of this chain on other chains.
     bytes32 public lastAttestedStateRoot;
@@ -38,6 +38,26 @@ contract EventListener {
         // _ackPendingEvents();
     }
 
+    function checkEvent(
+        bytes32[] memory proof, 
+        bool[] memory paths, 
+        bytes32 _interchainStateRoot, 
+        
+        bytes32[] memory _eventsProof,
+        bool[] memory _eventsPaths,
+        bytes32 _eventsRoot,
+        bytes32 _eventHash
+    ) public returns (bool) {
+        // Verify the events root for that chain.
+        bytes32 eventsRootLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
+        require(_verify(proof, paths, _interchainStateRoot, eventsRootLeaf), "STATEROOT_PROOF_INVALID");
+
+        // Verify the event hash
+        require(_verify(_eventsProof, _eventsPaths, eventsRootLeaf, _eventHash), "EVENT_PROOF_INVALID");
+
+        return true;
+    }
+    
     function checkEvent(uint256 _chainId, uint256 _period, bytes32[] memory _proof, bool[] memory paths, bytes32 _leaf) public returns(bool) {
         return _verify(_proof, paths, chainIdToProofs[_chainId][_period], _leaf);
     }
@@ -82,11 +102,11 @@ contract EventListener {
         bytes32 eventsRoot = emitter.getEventsRoot();
         require(eventsRoot == _eventsRoot, "EVENTS_NOT_ACKNOWLEDGED");
 
-
         bytes32 chainLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
         require(_verify(_proof, _proofPaths, _newInterchainStateRoot, chainLeaf) == true, "INTERCHAIN_STATE_ROOT_PROOF_INCORRECT");
         
         _updateStateRoot(_newInterchainStateRoot);
+        
         emitter.acknowledgeEvents();
     }
 
