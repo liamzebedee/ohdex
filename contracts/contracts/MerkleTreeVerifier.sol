@@ -1,33 +1,14 @@
 pragma solidity ^0.5.0;
 
-contract EventEmitter {
-    // Events pending acknowledgement on other chains.
-    bytes32[] public pendingEvents;
-
-    event EventEmitted(address indexed origin, bytes32 eventHash); 
-
-    constructor() public {
-    }
-
-    function emitEvent(bytes32 _eventHash) public returns(bool) {
-        pendingEvents.push(_eventHash);
-        emit EventEmitted(msg.sender, _eventHash);
-        // keccak256(abi.encodePacked(msg.sender, _eventHash)) is whats added to the merkle tree of that chain
-        // TODO: Implement fee system
-        return true;
-    }
-
-    function acknowledgeEvents() public {
-        delete pendingEvents;
-    }
-
-    function getEventsRoot() public view returns(bytes32) {
-        if(pendingEvents.length == 0) return 0x0;
-        return _computeMerkleRoot(pendingEvents);
-    }
-
-
+library MerkleTreeVerifier {
     function _computeMerkleRoot(bytes32[] memory items) public pure returns (bytes32) {
+        if(items.length == 1) {
+            return _hashBranch(
+                _hashLeaf(items[0]),
+                _hashLeaf(items[0])
+            );
+        }
+
         for(uint256 i = 0; i < items.length; i++) {
             items[i] = _hashLeaf(items[i]);
         }
