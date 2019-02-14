@@ -18,10 +18,13 @@ contract Bridge is Ownable {
         address escrowContract;
     }
 
+    mapping(address => uint256) bridgedTokenToNetwork;
+
     mapping(uint256 => Network) networks;
     mapping(bytes32 => bool) public processedEvents;
 
     event TokensBridged(uint256 indexed chainId, address indexed receiver, address indexed token, uint256 amount, uint256 _salt);
+    event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
 
     constructor(uint256 _chainId, address _eventListener, address _eventEmitter) public {
         chainId = _chainId;
@@ -58,7 +61,7 @@ contract Bridge is Ownable {
 
         // mint the tokens
         bridgedToken.mint(_receiver, _amount);
-
+        emit BridgedTokensClaimed(_token, _receiver, _amount, _chainId, _salt);
     }
 
     function bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
@@ -86,12 +89,23 @@ contract Bridge is Ownable {
 
         // Otherwise deploy the contract
         address bridgedTokenAddress = address(new BridgedToken());
+        
+        bridgedTokenToNetwork[bridgedTokenAddress] = _chainId;
 
         networks[_chainId].tokenToBridgedToken[_token] = bridgedTokenAddress;
         networks[_chainId].bridgedTokenToToken[bridgedTokenAddress] = _token;
 
         return networks[_chainId].tokenToBridgedToken[_token];
 
+    }
+
+    function getBridgedTokenStatic(address _token, uint256 _chainId) public view returns(address) {
+        return networks[_chainId].tokenToBridgedToken[_token];
+    }
+
+    function getOriginToken(address _token) public view returns(address token, uint256 network) {
+        network = bridgedTokenToNetwork[_token];
+        token = networks[network].bridgedTokenToToken[_token];
     }
 
 }

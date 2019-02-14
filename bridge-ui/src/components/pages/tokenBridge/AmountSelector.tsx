@@ -14,20 +14,21 @@ const styles = (theme:any) => ({
 class AmountSelector extends React.Component<any> {
 
     state = { dataKey: null};
-    balance = 0;
+    balance = "";
 
     componentDidMount() {
         const {drizzle, drizzleState} = this.props;
+        const {tokenAddress} = this.props.bridge;
         
         // On mount add token contract to truffle
         const contractObject = {
             contractName: this.props.bridge.tokenAddress,
-            web3Contract: new drizzle.web3.eth.Contract(ERC20ABI, this.props.bridge.tokenAddress)
+            web3Contract: new drizzle.web3.eth.Contract(ERC20ABI, tokenAddress)
         } 
         
         drizzle.addContract(contractObject);
 
-        const tokenContract = drizzle.contracts[this.props.bridge.tokenAddress];
+        const tokenContract = drizzle.contracts[tokenAddress];
 
         const dataKey = tokenContract.methods.balanceOf.cacheCall(drizzleState.accounts[0]);
 
@@ -36,6 +37,7 @@ class AmountSelector extends React.Component<any> {
         })
 
         this.setCanContinue();
+        this.setBridgeBack();
     }
 
     render() {
@@ -74,7 +76,7 @@ class AmountSelector extends React.Component<any> {
                         type="number"
                     />
 
-                    <Typography>Enter the amount of tokens you would like to bridge</Typography>
+                    <Typography>Enter the amount of tokens you would like to bridge. You will be asked to sign two transactions to bridge your tokens.</Typography>
                 </form>
             </>
         )
@@ -92,18 +94,42 @@ class AmountSelector extends React.Component<any> {
     setCanContinue = () => {
         const {tokenAmount} = this.props.bridge;
 
-        const canContinue = (this.balance as Number) >= (tokenAmount as Number);
+        const canContinue = tokenAmount != "" && tokenAmount != 0 && Number(this.balance) >= Number(tokenAmount);
 
         this.props.dispatch({
             type: bridgeActionTypes.SET_CAN_CONTINUE,
             canContinue
-        })
-            
+        })    
+    }
+
+    setBridgeBack = async () => {
+        const {drizzle, drizzleState} = this.props;
+        const {tokenAddress} = this.props.bridge;
+        const {chainB} = this.props.bridge;
+
+        const bridgeContract = drizzle.contracts.Bridge;
+        const originToken = await bridgeContract.methods.getOriginToken(tokenAddress).call();
+        
+        let bridgingBack = false;
+        let originTokenAddress = "";
+
+        //If token is being bridged back
+        if(originToken.network == chainB){
+            bridgingBack = true;
+            originTokenAddress = originToken.address;
+        }
+
+        this.props.dispatch({
+            type: bridgeActionTypes.SET_BRIDGING_BACK,
+            bridgingBack,
+            originTokenAddress
+        }) 
+
     }
 }
 
 const styledAmountSelector = withStyles(styles)(AmountSelector);
 
-export default connect(state => ({
+export default connect((state:any) => ({
     bridge: state.bridge,
 }))(styledAmountSelector);
