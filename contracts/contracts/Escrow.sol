@@ -17,6 +17,7 @@ contract Escrow is Ownable {
     mapping(uint256 => address) public chainToBridgeContract;
 
     event TokensBridged(uint256 indexed chainId, address indexed receiver, address indexed token, uint256 amount, uint256 _salt);
+    event OriginTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
 
     constructor(uint256 _chainId, address _eventListener, address _eventEmitter) public {
         chainId = _chainId;
@@ -27,9 +28,7 @@ contract Escrow is Ownable {
 
     function bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
         require(IERC20(_token).transferFrom(msg.sender, address(this), _amount), "TOKEN_TRANSFER_FAILED");
-
         emit TokensBridged(_chainId, _receiver, _token, _amount, _salt);
-
         eventEmitter.emitEvent(keccak256(abi.encodePacked(_receiver, _token, _amount, _chainId, _salt)));
     }
 

@@ -5,6 +5,7 @@ import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
 import ERC20ABI from '../../../abis/ERC20';
 import { fromWei } from 'web3-utils';
 
+
 const styles = (theme:any) => ({
     textField: {
         width: "100%"
@@ -25,11 +26,9 @@ class AmountSelector extends React.Component<any> {
             contractName: this.props.bridge.tokenAddress,
             web3Contract: new drizzle.web3.eth.Contract(ERC20ABI, tokenAddress)
         } 
-        
         drizzle.addContract(contractObject);
 
         const tokenContract = drizzle.contracts[tokenAddress];
-
         const dataKey = tokenContract.methods.balanceOf.cacheCall(drizzleState.accounts[0]);
 
         this.setState({
@@ -42,7 +41,6 @@ class AmountSelector extends React.Component<any> {
 
     render() {
         const {classes, drizzle, drizzleState} = this.props;
-
         const {tokenAmount} = this.props.bridge
 
         let balance = "Loading....";
