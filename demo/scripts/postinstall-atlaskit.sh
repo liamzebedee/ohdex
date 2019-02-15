@@ -1,2 +1,0 @@
-cp node_modules/@atlaskit/css-reset/dist/bundle.css static/@atlaskit/css-reset/dist/bundle.css
-cp node_modules/@atlaskit/reduced-ui-pack/dist/bundle.css static/@atlaskit/reduced-ui-pack/dist/bundle.css
