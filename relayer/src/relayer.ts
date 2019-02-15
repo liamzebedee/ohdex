@@ -5,7 +5,7 @@ const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
 
-import { MerkleTree } from '../../ts-merkle-tree/src';
+import { MerkleTree } from 'typescript-solidity-merkle-tree';
 // @ts-ignore
 import { keccak256 } from 'ethereumjs-util';
 
