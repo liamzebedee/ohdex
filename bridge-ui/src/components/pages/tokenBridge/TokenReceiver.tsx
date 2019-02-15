@@ -1,11 +1,13 @@
 import React from 'react';
 import { withStyles, LinearProgress, Typography } from '@material-ui/core';
 import { connect } from 'react-redux';
-import { toBN, toWei, randomHex } from 'web3-utils';
+import { toBN, toWei, fromWei, randomHex, BN } from 'web3-utils';
 import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
-import Web3 from 'web3';
+import {ethers} from 'ethers';
 import getConfigValue from '../../../utils/getConfigValue';
-import BridgeABI from '../../../../../contracts/build/contracts/Bridge.json'
+import BridgeABI from '../../../../../contracts/build/contracts/Bridge.json';
+import EscrowABI from '../../../../../contracts/build/contracts/Escrow.json';
+import { BigNumber } from 'ethers/utils';
 
 const styles = (theme:any) => ({
 
@@ -16,8 +18,11 @@ class TokenReceiver extends React.Component<any> {
     state = {
         approveTxId: "",
         bridgeTxId: "",
-        salt: undefined,
+        success: false,
     }
+
+    salt:BN = new BN(0);
+
     chainBProvider:any = null;
 
     componentDidMount() {
@@ -34,8 +39,13 @@ class TokenReceiver extends React.Component<any> {
         const from = drizzleState.accounts[0];
             
         const salt = toBN(randomHex(32));
+        this.salt = salt;
 
-        this.chainBProvider = new Web3(getConfigValue(this.props.bridge.chainB, "rpcUrl"));
+        let ethersProvider = new ethers.providers.JsonRpcProvider(getConfigValue(this.props.bridge.chainB, "rpcUrl"));
+        ethersProvider.polling = true;
+        ethersProvider.pollingInterval = 1000;
+    
+        this.chainBProvider = new ethers.providers.Web3Provider(ethersProvider);
 
         if(!bridgingBack) {
             const Escrow = drizzle.contracts.Escrow;
@@ -46,13 +56,12 @@ class TokenReceiver extends React.Component<any> {
             this.setState({
                 approveTxId,
                 bridgeTxId,
-                salt
             })
 
             // event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
-            const bridge = new this.chainBProvider.eth.Contract(BridgeABI.abi, getConfigValue(chainB, "bridgeAddress"));
-            bridge.events.BridgedTokensClaimed({filter: {token: tokenAddress, receiver: from, chainId: chainA}}, this.bridgedTokensClaimed);
-
+            const bridge = new ethers.Contract(getConfigValue(chainB, "bridgeAddress"), BridgeABI.abi, this.chainBProvider);
+            const filter = bridge.filters.BridgedTokensClaimed(tokenAddress, from, null, chainA, null);
+            bridge.on(filter, this.tokensClaimed);
         } else {
             // TODO Test this code
             const Bridge = drizzle.contracts.Bridge;
@@ -61,48 +70,54 @@ class TokenReceiver extends React.Component<any> {
 
             this.setState({
                 bridgeTxId,
-                salt
             })
 
             // event OriginTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
-            const escrow = new this.chainBProvider.eth.Contract(BridgeABI.abi, getConfigValue(chainB, "escrowAddress"));
-            escrow.events.OriginTokensClaimed({filter: {token: originTokenAddress, receiver: from, chainId: chainA}}, this.originTokensClaimed);
+            const escrow = new ethers.Contract(getConfigValue(chainB, "escrowAddress"), EscrowABI.abi, this.chainBProvider);
+            const filter = escrow.filters.OriginTokensClaimed(originTokenAddress, from, null, chainA, null);
+            escrow.on(filter, this.tokensClaimed);
         }
     }
 
-    bridgedTokensClaimed = (error:any, event:any) => {
-        if(error) {
-            console.error(error);
-            return;
-        }
-        alert("You received the bridge tokens");
-        // TODO Implement user feedback on receiving tokens and parameter checking
-    }
+    tokensClaimed = (token:string, receiver:string, amount:any, chainId:any, salt:any) => {
+        const {tokenAmount} = this.props.bridge;  
+        const weiTokenAmount = toWei(tokenAmount);
 
-    originTokensClaimed = (error:any, event:any) => {
-        if(error) {
-            console.error(error);
-            return;
+        console.log(`Received ${fromWei(amount)} ${token} at ${receiver} from chain ${chainId} with salt: ${salt}`)
+        
+        if(weiTokenAmount == amount && salt == this.salt) {
+            this.setState({
+                success: true
+            })
         }
-        alert("You received the origin tokens");
-        // TODO Implement user feedback on receiving tokens and parameter checking
     }
 
     render() {
         const {progress, stateMessage} = this.bridgingState();
+        const {success} = this.state;
+        const {tokenAmount, bridgingBack, tokenAddress, originTokenAddress} = this.props.bridge;
 
         return (
             <>
-                <Typography align="center"> {stateMessage} </Typography>
-                <LinearProgress variant="determinate" value={progress} />
-            </>
+                {!success ?
+                    <> 
+                        <Typography align="center"> {stateMessage} </Typography>
+                        <LinearProgress variant="determinate" value={progress} />
+                    </>
+                 :
+                    <>
+                        <Typography align="center">Tokens Bridged!</Typography>
+                        <Typography align="center">Received {tokenAmount} at token address: {bridgingBack ? originTokenAddress : tokenAddress}</Typography>
+                    </>
+                }
+            </>    
         )
     }
 
     bridgingState() {
         const {drizzleState} = this.props;
         const {transactions, transactionStack} = drizzleState;
-        const {approveTxId, bridgeTxId} = this.state;
+        const {approveTxId, bridgeTxId, success} = this.state;
 
 
         let stateMessage = "";
@@ -114,7 +129,7 @@ class TokenReceiver extends React.Component<any> {
         } else if (transactions[transactionStack[approveTxId]].status == "pending" || transactions[transactionStack[bridgeTxId]].status == "pending" ) {
             stateMessage = "Awaiting confirmation of transactions";
             progress = 25;
-        } else if (transactions[transactionStack[approveTxId]].status == "success" || transactions[transactionStack[bridgeTxId]].status == "success" ) {
+        } else if (transactions[transactionStack[approveTxId]].status == "success" || transactions[transactionStack[bridgeTxId]].status == "success" && !success) {
             stateMessage = "Transactions confirmed waiting for relayers to bridge tokens";
             progress = 50;
         } 
