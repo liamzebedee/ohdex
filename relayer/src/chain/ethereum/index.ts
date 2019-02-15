@@ -28,7 +28,7 @@ export class EthereumChainTracker extends ChainTracker {
     eventListenerContract: EventListenerContract;
 
     interchainStateRoot: Buffer;
-    ackdEventsRoot: Buffer;
+    eventsRoot: Buffer;
 
     pendingEvents: Buffer[] = [];
 
@@ -91,11 +91,22 @@ export class EthereumChainTracker extends ChainTracker {
             (await this.eventListenerContract.interchainStateRoot.callAsync())
         )
 
+        let eventEmitterContract = new EventEmitterContract(
+            require('../../../../contracts/build/contracts/EventEmitter.json').abi,
+            this.conf.eventEmitterAddress,
+            this.pe,
+            { from: account }
+        );
+        this.eventsRoot = dehexify(
+            await eventEmitterContract.getEventsRoot.callAsync()
+        );
         // TODO populate from EventEmitter.pendingEvents when ready
+        // this.pendingEvents = await eventEmitterContract.pendingEvents.callAsync();
         this.pendingEvents = [];
-        this.ackdEventsRoot = dehexify(
-            (await this.eventListenerContract.ackdEventsRoot.callAsync())
-        )
+                
+        // this.ackdEventsRoot = dehexify(
+        //     (await this.eventListenerContract.ackdEventsRoot.callAsync())
+        // )
         // this.ackdEventsRoot = dehexify('0000000000000000000000000000000000000000000000000000000000000000');
 
         
@@ -107,7 +118,7 @@ export class EthereumChainTracker extends ChainTracker {
 
         this.logger.info(`Sync'd to block #${blockNum}, ${this.pendingEvents.length} pending events`)
         this.logger.info(`stateRoot = ${this.interchainStateRoot.toString('hex')}`)
-        this.logger.info(`ackedEventsRoot = ${this.ackdEventsRoot.toString('hex')}`)
+        this.logger.info(`eventsRoot = ${this.eventsRoot.toString('hex')}`)
 
         // ethersProvider.resetEventsBlock(this.lastBlock);
         // ethersProvider.resetEventsBlock(0);
@@ -155,15 +166,7 @@ export class EthereumChainTracker extends ChainTracker {
         eventListenerContract.on(EventListenerEvents.StateRootUpdated, async (root: string, ev: ethers.Event) => {
             this.logger.info(`state root updated - ${root}`)
             this.interchainStateRoot = dehexify(root);
-            // this.pendingEvents.push(dehexify(eventHash));
-            // 
-            // this.events.emit(
-            //     'eventEmitted', 
-            //     { 
-            //         eventHash, chainRoot: ev.blockHash, chainRootIndex: ev.blockNumber, 
-            //         chainTimestamp: (await ev.getBlock()).timestamp 
-            //     }
-            // );
+            this.pendingEvents = [];
         })
     }
 
@@ -172,7 +175,7 @@ export class EthereumChainTracker extends ChainTracker {
             let eventsTree = new MerkleTree(this.pendingEvents, keccak256);
             return eventsTree.root();
         } else {
-            return this.ackdEventsRoot;
+            return this.eventsRoot;
         }
     }
     

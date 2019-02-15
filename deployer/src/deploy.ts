@@ -97,17 +97,21 @@ async function _deploy(configMgr: ConfigManager, network: string) {
         ...getDeployArgs('EventUtil', pe, account)
     );
 
-    // 2 Deploy eventListener
-
-    let eventListener = await EventListenerContract.deployAsync(
-        ...getDeployArgs('EventListener', pe, account))
-    ;
-
-    // 3 Deploy eventEmitter
+    // 2 Deploy eventEmitter
 
     let eventEmitter = await EventEmitterContract.deployAsync(
         ...getDeployArgs('EventEmitter', pe, account)
     );
+
+
+    // 3 Deploy eventListener
+    
+    // @ts-ignore
+    let eventListener = await EventListenerContract.deployAsync(
+        ...getDeployArgs('EventListener', pe, account),
+        eventEmitter.address
+    )
+
 
     // 4 Deploy Escrow
 
