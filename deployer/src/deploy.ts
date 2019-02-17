@@ -3,9 +3,9 @@ import { Web3ProviderEngine, RPCSubprovider, BigNumber} from "0x.js";
 import { PrivateKeyWalletSubprovider } from "@0x/subproviders";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 
-import{
-    EventUtilContract,
-} from '../../contracts/build/wrappers/event_util';
+// import{
+//     EventUtilContract,
+// } from '../../contracts/build/wrappers/event_util';
 
 import {
     EventListenerContract
@@ -93,9 +93,9 @@ async function _deploy(configMgr: ConfigManager, network: string) {
 
     // 1 Deploy event util
 
-    let eventUtil = await EventUtilContract.deployAsync(
-        ...getDeployArgs('EventUtil', pe, account)
-    );
+    // let eventUtil = await EventUtilContract.deployAsync(
+    //     ...getDeployArgs('EventUtil', pe, account)
+    // );
 
     // 2 Deploy eventEmitter
 
@@ -134,7 +134,7 @@ async function _deploy(configMgr: ConfigManager, network: string) {
     )
     
 
-    config.eventUtilAddress = eventUtil.address;
+    // config.eventUtilAddress = eventUtil.address;
     config.eventEmitterAddress = eventEmitter.address;
     config.eventListenerAddress = eventListener.address;
     config.escrowAddress = escrow.address;

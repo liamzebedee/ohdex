@@ -57,6 +57,10 @@ describe('EthereumChainTracker', function(){
         accounts = await web3.getAvailableAddressesAsync();
         user = accounts[0]
     });
+
+    it("computes event root correctly with 0 events", async() => {
+        
+    })
     
     it('#start', async() => {
         // @ts-ignore
@@ -70,8 +74,7 @@ describe('EthereumChainTracker', function(){
         let spy = sinon.spy();
 
         let called = new Promise((res, rej) => {
-            tracker.events.prependListener('eventEmitted', () => { 
-                console.log('root')
+            tracker.events.prependListener('EventEmitter.EventEmitted', () => { 
                 res()
             });
             setTimeout(() => rej(), 3000);
@@ -148,14 +151,23 @@ class MultichainProviderFactory {
 }
 
 
+
 describe.only('Relayer', function(){
     this.timeout(35000);
 
     it('updates the state root')
 
-    it('updates eventListener.stateroot', async() => {
-        let multichain = new MultichainProviderFactory()
+    let multichain: MultichainProviderFactory;
+    before(async () => {
+        multichain = new MultichainProviderFactory()
         await multichain.connect()
+    })
+
+    after(async () => {
+        await multichain.restore()
+    })
+
+    it('updates eventListener.stateroot', async() => {
 
         let accountsConf = await AccountsConfig.load('../../config/test_accounts.json')
         let testConfig = require('../../config/test_networks.json');
@@ -200,7 +212,7 @@ describe.only('Relayer', function(){
         ethersProvider.pollingInterval = 1000;
 
         let eventListener = new ethers.Contract(
-            chain2.config.eventEmitterAddress,
+            chain2.config.eventListenerAddress,
             getContractArtifact('EventListener').abi,
             ethersProvider
         )
@@ -218,7 +230,6 @@ describe.only('Relayer', function(){
             setTimeout(res, 10000)
         })
 
-        await multichain.restore()
         await relayer.stop()
     })
 })

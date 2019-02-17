@@ -1,6 +1,7 @@
 import { BlockWithTransactionData } from "ethereum-protocol";
 import { EventEmitter } from "../declarations";
 import { IChain } from "../../../multichain/lib/types";
+import { ITokenBridgeEventArgs } from "../../../contracts/build/wrappers/i_token_bridge";
 const eventEmitter = require("events");
 
 interface EventEmittedEvent extends Event {
@@ -9,8 +10,17 @@ interface EventEmittedEvent extends Event {
     newChainIndex: string;
 }
 
+type chainId = string
+interface MessageSentEvent extends Event {
+    // from: chainId;
+    toBridge: chainId;
+    data: ITokenBridgeEventArgs;
+    eventHash: string;
+}
+
 interface ChainEvents {
-    "eventEmitted": EventEmittedEvent
+    "EventEmitter.EventEmitted": EventEmittedEvent,
+    "ITokenBridge.TokensBridgedEvent": MessageSentEvent
 }
 
 abstract class IChainTracker {
@@ -27,7 +37,7 @@ const { format } = winston;
 const { combine, label, json, simple } = format;
 
 abstract class ChainTracker extends IChainTracker implements IChain {    
-    constructor(chainId: string) {
+    constructor(chainId: chainId) {
         super();
         this.id = chainId;
 
@@ -52,5 +62,6 @@ abstract class ChainTracker extends IChainTracker implements IChain {
 export {
     ChainEvents,
     ChainTracker,
-    EventEmittedEvent
+    EventEmittedEvent,
+    MessageSentEvent
 }

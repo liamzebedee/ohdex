@@ -10,6 +10,8 @@ contract EventListener {
     // The last recorded root of this chain on other chains.
     bytes32 public lastAttestedStateRoot;
 
+    // bytes32 public bridgeId;
+
     EventEmitter emitter;
 
     // bytes32 public stateRoot;
@@ -48,32 +50,32 @@ contract EventListener {
         bytes32 _eventsRoot,
         bytes32 _eventHash
     ) public returns (bool) {
-        // Verify the events root for that chain.
-        bytes32 eventsRootLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
-        require(_verify(proof, paths, _interchainStateRoot, eventsRootLeaf), "STATEROOT_PROOF_INVALID");
+        // Verify the events root for that chain's bridge.
+        bytes32 bridgeLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
+        require(_verify(proof, paths, _interchainStateRoot, bridgeLeaf), "STATEROOT_PROOF_INVALID");
 
         // Verify the event hash
-        require(_verify(_eventsProof, _eventsPaths, eventsRootLeaf, _eventHash), "EVENT_PROOF_INVALID");
+        require(_verify(_eventsProof, _eventsPaths, bridgeLeaf, _eventHash), "EVENT_PROOF_INVALID");
 
         return true;
     }
     
-    function checkEvent(uint256 _chainId, uint256 _period, bytes32[] memory _proof, bool[] memory paths, bytes32 _leaf) public returns(bool) {
-        return _verify(_proof, paths, chainIdToProofs[_chainId][_period], _leaf);
-    }
+    // function checkEvent(uint256 _chainId, uint256 _period, bytes32[] memory _proof, bool[] memory paths, bytes32 _leaf) public returns(bool) {
+    //     return _verify(_proof, paths, chainIdToProofs[_chainId][_period], _leaf);
+    // }
 
-    function getProof(uint256 _chainId, uint256 _index) public view returns(bytes32) {
-        return chainIdToProofs[_chainId][_index]; 
-    }
+    // function getProof(uint256 _chainId, uint256 _index) public view returns(bytes32) {
+    //     return chainIdToProofs[_chainId][_index]; 
+    // }
 
-    function getLatestProof(uint256 _chainId) public view returns(bytes32) {
-        return getProof(_chainId, chainIdToProofs[_chainId].length - 1);
-    }
+    // function getLatestProof(uint256 _chainId) public view returns(bytes32) {
+    //     return getProof(_chainId, chainIdToProofs[_chainId].length - 1);
+    // }
 
-    function updateProof(uint256 _chainId, bytes32 _proof) public {
-        chainIdToProofs[_chainId].push(_proof);
-        emit ProofSubmitted(_chainId, _proof);
-    }
+    // function updateProof(uint256 _chainId, bytes32 _proof) public {
+    //     chainIdToProofs[_chainId].push(_proof);
+    //     emit ProofSubmitted(_chainId, _proof);
+    // }
 
     // TODO only the relayer(s) should be able to update the proof
     function updateStateRoot(
@@ -99,8 +101,7 @@ contract EventListener {
 
         // TODO - Verify this chain's events are acknowledged        
         // bytes32 eventsRoot = MerkleProof.computeRoot(EventEmitter.getPendingEvents());
-        bytes32 eventsRoot = emitter.getEventsRoot();
-        require(eventsRoot == _eventsRoot, "EVENTS_NOT_ACKNOWLEDGED");
+        require(emitter.getEventsRoot() == _eventsRoot, "EVENTS_NOT_ACKNOWLEDGED");
 
         bytes32 chainLeaf = _hashLeaf(_interchainStateRoot, _eventsRoot);
         require(_verify(_proof, _proofPaths, _newInterchainStateRoot, chainLeaf) == true, "INTERCHAIN_STATE_ROOT_PROOF_INCORRECT");
@@ -110,9 +111,9 @@ contract EventListener {
         emitter.acknowledgeEvents();
     }
 
-    function _hashLeaf(bytes32 a, bytes32 b) public pure returns (bytes32) {
+    function _hashLeaf(bytes32 b, bytes32 c) public pure returns (bytes32) {
         bytes1 LEAF_PREFIX = 0x00;
-        return keccak256(abi.encodePacked(LEAF_PREFIX, a, b));
+        return keccak256(abi.encodePacked(LEAF_PREFIX, b, c));
     }
 
     /**
