@@ -36,9 +36,10 @@ const assert = require('assert');
 
 
 function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ string, AbiDefinition[], Provider, Partial<TxData>] {
-    let json = require(`../../contracts/build/contracts/${name}.json`);
-    let bytecode = json.bytecode;
-    let abi = json.abi;
+    // let json = require(`../../contracts/build/contracts/${name}.json`);
+    let json = require(`../../contracts/build/artifacts/${name}.json`);
+    let bytecode = json.compilerOutput.evm.bytecode.object;
+    let abi = json.compilerOutput.abi;
     let provider = pe;
 
     assert.ok(bytecode.length > 0)

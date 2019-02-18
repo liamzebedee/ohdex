@@ -53,7 +53,7 @@ abstract class ChainTracker extends IChainTracker implements IChain {
     }
 
     abstract listen();
-    abstract computeStateLeaf(): Buffer;
+    // abstract computeStateLeaf(): Buffer;
 
     // abstract getStateRoot(): Buffer;
     // abstract getInterchainStateRoot(): Buffer;

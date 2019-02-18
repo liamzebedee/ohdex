@@ -1,4 +1,4 @@
-import { EthereumChainTracker } from "./chain/ethereum";
+import { EthereumChainTracker, StateLeaf } from "./chain/ethereum";
 import { ChainTracker, EventEmittedEvent, MessageSentEvent } from "./chain/tracker";
 
 const winston = require('winston');
@@ -110,12 +110,13 @@ export class Relayer {
     }
 
     async updateStateRoots(chainId) {
-        let roots: { [k: string]: Buffer } = {};
+        let roots: { 
+            [k: string]: StateLeaf
+        } = {};
         Object.values(this.chains).map(chain => {
-            roots[chain.id] = chain.computeStateLeaf()
+            roots[chain.id] = chain.getStateLeaf()
         });
-        let items = Object.values(roots);
-        console.log(items)
+        let items = Object.values(roots).map(root => root._leaf);
 
         let state = new MerkleTree(
             items,
@@ -124,20 +125,18 @@ export class Relayer {
         this.logger.info(`Computed new interchain state root: ${hexify(state.root())}`)
         
         let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chainId)
-        let newStateRoot = state.root()
         
         await Promise.all(
             chainsToUpdate.map(async chain => {
                 let leafIdx = Object.keys(roots).indexOf(chain.id)
                 let proof = state.generateProof(leafIdx)
-                let leaf = state.layers[0][leafIdx]
+                // let leaf = state.layers[0][leafIdx]
                 
-                if(!state.verifyProof(proof, leaf)) throw new Error;
+                if(!state.verifyProof(proof, proof.leaf)) throw new Error;
 
                 return await chain.updateStateRoot(
                     proof,
-                    newStateRoot,
-                    // state
+                    roots[chain.id]
                 )
             })
         )

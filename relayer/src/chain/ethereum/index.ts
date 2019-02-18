@@ -50,7 +50,7 @@ export class EthereumChainTracker extends ChainTracker {
     bridgeContract_sub: ethers.Contract;
     escrowContract: EscrowContract;
     escrowContract_sub: ethers.Contract;
-    pendingTokenBridgingEvs: MessageSentEvent[];
+    pendingTokenBridgingEvs: MessageSentEvent[] = [];
 
     
     account: string;
@@ -143,7 +143,7 @@ export class EthereumChainTracker extends ChainTracker {
 
         this.logger.info(`Sync'd to block #${blockNum}, ${this.eventsEmitted.length} pending events`)
         this.logger.info(`stateRoot = ${this.interchainStateRoot.toString('hex')}`)
-        this.logger.info(`eventsRoot = ${this.computeEventsRoot().toString('hex')}`)
+        this.logger.info(`eventsRoot = ${this.getEventsRoot().toString('hex')}`)
 
         
         this.bridgeContract = new BridgeContract(
@@ -193,22 +193,6 @@ export class EthereumChainTracker extends ChainTracker {
         });
 
         let eventsEmitted: Buffer[] = [];
-        // eventsEmitted = await new Promise((res, rej) => {
-        //     this.eventEmitter_web3.getPastEvents('EventEmitted', {
-        //         fromBlock: 0,
-        //         toBlock: "latest"
-        //     }, (err, evs) => {
-        //         if(err) rej(err)
-                
-        //         // console.log(evs)
-        //         let parsed = evs.map(ev => {
-        //             // return ev.returnValues;
-        //             return dehexify(ev.returnValues.eventHash)
-        //         })
-        //         res(parsed)
-        //     })
-        // })
-        
 
 
         for (const log of logs) {
@@ -218,7 +202,8 @@ export class EthereumChainTracker extends ChainTracker {
 
         this.interchainStateRoot = interchainStateRoot;
         this.eventsEmitted = eventsEmitted;
-        // this.eventsTree = new MerkleTree(this.eventsEmitted, keccak256);
+        if(this.eventsEmitted.length)
+            this.eventsTree = new MerkleTree(this.eventsEmitted, keccak256);
     }
 
     listen() {
@@ -292,37 +277,37 @@ export class EthereumChainTracker extends ChainTracker {
         return false;
     }
 
-    computeEventsRoot(): Buffer {
+    getEventsRoot(): Buffer {
         if(this.eventsEmitted.length == 0) {
             return Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex');
         }
-        this.eventsTree = new MerkleTree(this.eventsEmitted, keccak256);
         return this.eventsTree.root();
     }
     
-    getStateLeafItems(): Buffer[] {
-        return [
-            this.interchainStateRoot,
-            this.computeEventsRoot()
-        ]
+    getStateLeaf(): StateLeaf {
+        let interchainStateRoot = this.interchainStateRoot
+        let eventsRoot = this.getEventsRoot();
+
+        return {
+            interchainStateRoot,
+            eventsRoot,
+            items: [
+                interchainStateRoot,
+                eventsRoot
+            ],
+            _leaf: Buffer.concat([
+                interchainStateRoot,
+                eventsRoot
+            ])
+        }
     }
 
-    computeStateLeaf(): Buffer {
-        let items = this.getStateLeafItems()
-        let itemsBuf: Buffer[] = [
-            ...items.map(item => AbiCoder.encodeParameter('bytes32', item))
-        ].map(item => item.slice(2)).map(item => Buffer.from(item, 'hex'))
-        return Buffer.concat(itemsBuf)
-    }
-
-    async updateStateRoot(proof: MerkleTreeProof, newInterchainStateRoot: Buffer): Promise<any> {
-        let items = this.getStateLeafItems()
-        let itemArgs: string[] = items.map(item => AbiCoder.encodeParameter('bytes32', item))
+    async updateStateRoot(proof: MerkleTreeProof, stateLeafItems: StateLeaf): Promise<any> {
+        let itemArgs: string[] = stateLeafItems.items.map(item => AbiCoder.encodeParameter('bytes32', item))
         let _proofs = proof.proofs.map(hexify)
         let _paths = proof.paths;
-        let _newInterchainStateRoot = hexify(newInterchainStateRoot);
+        let _newInterchainStateRoot = hexify(proof.root);
         let [ _interchainStateRoot, _eventsRoot ] = itemArgs
-        // this.logger.info(_eventsRoot)
         
         try {
             await this.web3Wrapper.awaitTransactionSuccessAsync(
@@ -334,6 +319,7 @@ export class EthereumChainTracker extends ChainTracker {
                     _eventsRoot
                 )
             )
+            this.interchainStateRoot = dehexify(_newInterchainStateRoot)
 
             // Now process any events on this bridge for the user
             for(let ev of this.pendingTokenBridgingEvs) {
@@ -396,14 +382,13 @@ export class EthereumChainTracker extends ChainTracker {
 }
 
 
-// interface StateLeaf {
-//     items: 0
-// }
+interface StateLeaf {
+    _leaf: Buffer
+    items: Buffer[]
+    interchainStateRoot: Buffer
+    eventsRoot: Buffer
+}
 
-// class EventsProvider {
-//     constructor() {}
-//     interchainStateRoot(): string;
-//     eventsRoot(): string;
-//     computeStateLeaf(): Buffer;
-
-// }
+export {
+    StateLeaf
+}

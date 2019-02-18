@@ -7,7 +7,6 @@
         "outputSelection": {
             "*": {
                 "*": [
-
                     "abi",
                     "evm.bytecode.object",
                     "evm.bytecode.sourceMap",

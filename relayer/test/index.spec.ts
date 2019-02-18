@@ -107,25 +107,13 @@ class MultichainProviderFactory {
     async connect() {
         const config = require('../../config/test_networks.json');
 
-        await Promise.all([
-            this.connect_(config['kovan']),
-            this.connect_(config['rinkeby'])
-        ])
-    }
-
-    async makeProvider(i: number): Promise<Web3ProviderEngine> {
-        let thing = this.things[i]
-
-        let pe = new Web3ProviderEngine();
-        pe.addProvider(new RPCSubprovider(thing.config.rpcUrl))
-
-        return pe;
+        await this.connect_(config['kovan'])
+        await this.connect_(config['rinkeby'])
     }
 
     async connect_(config: any) {
-        let rpcUrl = config.rpcUrl;
         let pe = new Web3ProviderEngine();
-        pe.addProvider(new RPCSubprovider(rpcUrl))
+        pe.addProvider(new RPCSubprovider(config.rpcUrl))
         pe.start()
 
         let web3 = new Web3Wrapper(pe);
@@ -136,7 +124,7 @@ class MultichainProviderFactory {
             snapshotId,
             config,
         })
-        console.log(`snapshot ${rpcUrl} at ${snapshotId}`)
+        console.log(`snapshot ${config.rpcUrl} at ${snapshotId}`)
         
         // accounts = await web3.getAvailableAddressesAsync();
         // user = accounts[0]
@@ -163,12 +151,12 @@ describe.only('Relayer', function(){
         await multichain.connect()
     })
 
-    after(async () => {
+
+    process.on('exit', async function() {
         await multichain.restore()
     })
 
     it('updates eventListener.stateroot', async() => {
-
         let accountsConf = await AccountsConfig.load('../../config/test_accounts.json')
         let testConfig = require('../../config/test_networks.json');
         
@@ -196,7 +184,7 @@ describe.only('Relayer', function(){
         );
         
         // Emit the event
-        let evHash = keccak256('123');
+        let evHash = keccak256(`${new Date}`);
         
         await chain1Web3.awaitTransactionSuccessAsync(
             await eventEmitter.emitEvent.sendTransactionAsync(evHash)
