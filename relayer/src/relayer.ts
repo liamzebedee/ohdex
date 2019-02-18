@@ -1,13 +1,17 @@
-import { EthereumChainTracker } from "./chain/ethereum";
-import { ChainTracker, EventEmittedEvent } from "./chain/tracker";
+import { EthereumChainTracker, StateLeaf } from "./chain/ethereum";
+import { ChainTracker, EventEmittedEvent, MessageSentEvent } from "./chain/tracker";
 
 const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
 
-import { MerkleTree } from 'typescript-solidity-merkle-tree';
+// import { MerkleTree } from 'typescript-solidity-merkle-tree';
+import { MerkleTree, MerkleTreeProof } from "../../ts-merkle-tree/src";
+
 // @ts-ignore
 import { keccak256 } from 'ethereumjs-util';
+import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
+import { EventEmitter } from "./declarations";
 
 interface ChainConfig {
     chainType: 'ethereum';
@@ -17,8 +21,26 @@ interface ChainConfig {
 function hexify(buf: Buffer): string {
     return `0x${buf.toString('hex')}`;
 }
+
+const eventEmitter = require("events");
+const forward = require('forward-emitter');
+
+type chainId = string;
+interface CrosschainEventEvent extends Event {
+    from: chainId;
+    to: chainId;
+    data: ITokenBridgeEventArgs;
+}
+
+interface CrosschainEvents {
+    "sent": CrosschainEventEvent
+}
+
 export class Relayer {
     chains: { [k: string]: EthereumChainTracker };
+
+    crosschainEvents: EventEmitter<CrosschainEvents>;
+
     logger;
     config: any;
 
@@ -37,6 +59,8 @@ export class Relayer {
                 new winston.transports.Console()
             ]
         });
+
+        this.crosschainEvents = new eventEmitter();
     }
 
     async start() {
@@ -66,38 +90,53 @@ export class Relayer {
         Object.values(this.chains).map(chain => {
             chain.listen()
             
-            chain.events.on('eventEmitted', async (ev: EventEmittedEvent) => {                
-                // this.roots[chain.id] = chain.computeStateLeaf()
+            chain.events.on('EventEmitter.EventEmitted', async (ev: EventEmittedEvent) => {
                 await this.updateStateRoots(chain.id)
             })
+
+            chain.events.on('ITokenBridge.TokensBridgedEvent', (msg: MessageSentEvent) => {
+                let found: boolean = false;
+
+                for(let chain2 of Object.values(this.chains)) {
+                    if(chain2.receiveCrosschainMessage(msg)) return;
+                }
+
+                if(!found) {
+                    this.logger.error(`Couldn't find bridge ${msg.toBridge} for cross-chain message`)
+                }
+            })
         });
+
     }
 
     async updateStateRoots(chainId) {
-        let roots = {};
+        let roots: { 
+            [k: string]: StateLeaf
+        } = {};
         Object.values(this.chains).map(chain => {
-            roots[chain.id] = chain.computeStateLeaf()
+            roots[chain.id] = chain.getStateLeaf()
         });
+        let items = Object.values(roots).map(root => root._leaf);
 
         let state = new MerkleTree(
-            Object.values(roots),
+            items,
             keccak256
         );
         this.logger.info(`Computed new interchain state root: ${hexify(state.root())}`)
         
         let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chainId)
-        let newStateRoot = state.root()
         
         await Promise.all(
-            chainsToUpdate.map(chain => {
-                let proof = state.generateProof(roots[chain.id])
-                let leaf = state.findLeaf(roots[chain.id])
+            chainsToUpdate.map(async chain => {
+                let leafIdx = Object.keys(roots).indexOf(chain.id)
+                let proof = state.generateProof(leafIdx)
+                // let leaf = state.layers[0][leafIdx]
                 
-                if(!state.verifyProof(proof, leaf)) throw new Error;
+                if(!state.verifyProof(proof, proof.leaf)) throw new Error;
 
-                return chain.updateStateRoot(
+                return await chain.updateStateRoot(
                     proof,
-                    newStateRoot
+                    roots[chain.id]
                 )
             })
         )

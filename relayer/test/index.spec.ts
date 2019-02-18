@@ -57,6 +57,10 @@ describe('EthereumChainTracker', function(){
         accounts = await web3.getAvailableAddressesAsync();
         user = accounts[0]
     });
+
+    it("computes event root correctly with 0 events", async() => {
+        
+    })
     
     it('#start', async() => {
         // @ts-ignore
@@ -70,8 +74,7 @@ describe('EthereumChainTracker', function(){
         let spy = sinon.spy();
 
         let called = new Promise((res, rej) => {
-            tracker.events.prependListener('eventEmitted', () => { 
-                console.log('root')
+            tracker.events.prependListener('EventEmitter.EventEmitted', () => { 
                 res()
             });
             setTimeout(() => rej(), 3000);
@@ -104,25 +107,13 @@ class MultichainProviderFactory {
     async connect() {
         const config = require('../../config/test_networks.json');
 
-        await Promise.all([
-            this.connect_(config['kovan']),
-            this.connect_(config['rinkeby'])
-        ])
-    }
-
-    async makeProvider(i: number): Promise<Web3ProviderEngine> {
-        let thing = this.things[i]
-
-        let pe = new Web3ProviderEngine();
-        pe.addProvider(new RPCSubprovider(thing.config.rpcUrl))
-
-        return pe;
+        await this.connect_(config['kovan'])
+        await this.connect_(config['rinkeby'])
     }
 
     async connect_(config: any) {
-        let rpcUrl = config.rpcUrl;
         let pe = new Web3ProviderEngine();
-        pe.addProvider(new RPCSubprovider(rpcUrl))
+        pe.addProvider(new RPCSubprovider(config.rpcUrl))
         pe.start()
 
         let web3 = new Web3Wrapper(pe);
@@ -133,7 +124,7 @@ class MultichainProviderFactory {
             snapshotId,
             config,
         })
-        console.log(`snapshot ${rpcUrl} at ${snapshotId}`)
+        console.log(`snapshot ${config.rpcUrl} at ${snapshotId}`)
         
         // accounts = await web3.getAvailableAddressesAsync();
         // user = accounts[0]
@@ -148,15 +139,24 @@ class MultichainProviderFactory {
 }
 
 
+
 describe.only('Relayer', function(){
     this.timeout(35000);
 
     it('updates the state root')
 
-    it('updates eventListener.stateroot', async() => {
-        let multichain = new MultichainProviderFactory()
+    let multichain: MultichainProviderFactory;
+    before(async () => {
+        multichain = new MultichainProviderFactory()
         await multichain.connect()
+    })
 
+
+    process.on('exit', async function() {
+        await multichain.restore()
+    })
+
+    it('updates eventListener.stateroot', async() => {
         let accountsConf = await AccountsConfig.load('../../config/test_accounts.json')
         let testConfig = require('../../config/test_networks.json');
         
@@ -184,7 +184,7 @@ describe.only('Relayer', function(){
         );
         
         // Emit the event
-        let evHash = keccak256('123');
+        let evHash = keccak256(`${new Date}`);
         
         await chain1Web3.awaitTransactionSuccessAsync(
             await eventEmitter.emitEvent.sendTransactionAsync(evHash)
@@ -200,7 +200,7 @@ describe.only('Relayer', function(){
         ethersProvider.pollingInterval = 1000;
 
         let eventListener = new ethers.Contract(
-            chain2.config.eventEmitterAddress,
+            chain2.config.eventListenerAddress,
             getContractArtifact('EventListener').abi,
             ethersProvider
         )
@@ -218,7 +218,6 @@ describe.only('Relayer', function(){
             setTimeout(res, 10000)
         })
 
-        await multichain.restore()
         await relayer.stop()
     })
 })

@@ -3,9 +3,9 @@ import { Web3ProviderEngine, RPCSubprovider, BigNumber} from "0x.js";
 import { PrivateKeyWalletSubprovider } from "@0x/subproviders";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 
-import{
-    EventUtilContract,
-} from '../../contracts/build/wrappers/event_util';
+// import{
+//     EventUtilContract,
+// } from '../../contracts/build/wrappers/event_util';
 
 import {
     EventListenerContract
@@ -36,9 +36,10 @@ const assert = require('assert');
 
 
 function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ string, AbiDefinition[], Provider, Partial<TxData>] {
-    let json = require(`../../contracts/build/contracts/${name}.json`);
-    let bytecode = json.bytecode;
-    let abi = json.abi;
+    // let json = require(`../../contracts/build/contracts/${name}.json`);
+    let json = require(`../../contracts/build/artifacts/${name}.json`);
+    let bytecode = json.compilerOutput.evm.bytecode.object;
+    let abi = json.compilerOutput.abi;
     let provider = pe;
 
     assert.ok(bytecode.length > 0)
@@ -93,9 +94,9 @@ async function _deploy(configMgr: ConfigManager, network: string) {
 
     // 1 Deploy event util
 
-    let eventUtil = await EventUtilContract.deployAsync(
-        ...getDeployArgs('EventUtil', pe, account)
-    );
+    // let eventUtil = await EventUtilContract.deployAsync(
+    //     ...getDeployArgs('EventUtil', pe, account)
+    // );
 
     // 2 Deploy eventEmitter
 
@@ -134,7 +135,7 @@ async function _deploy(configMgr: ConfigManager, network: string) {
     )
     
 
-    config.eventUtilAddress = eventUtil.address;
+    // config.eventUtilAddress = eventUtil.address;
     config.eventEmitterAddress = eventEmitter.address;
     config.eventListenerAddress = eventListener.address;
     config.escrowAddress = escrow.address;
