@@ -7,9 +7,9 @@ import { Web3Wrapper } from '@0x/web3-wrapper';
 import { MnemonicWalletSubprovider, Web3ProviderEngine, RPCSubprovider } from '@0x/subproviders'
 import { providers } from "web3";
 import { resolve, dirname } from 'path'
-import { existsSync } from 'fs'
+import { existsSync, mkdirSync } from 'fs'
 
-const DEFAULT_BALANCE_ETHER = '1000000000000000000'
+const DEFAULT_BALANCE_ETHER = '99999999999'
 
 
 export class EthereumChain implements IChain {
@@ -18,21 +18,24 @@ export class EthereumChain implements IChain {
     async start(conf: IChainConfig, accountsConf: IAccountsConfig): Promise<any> {
         let dbpath = resolve(dirname(require.resolve(`../../package.json`)), `db/${conf.chainId}`)
         let firstStart = !existsSync(dbpath)
+        if(firstStart) {
+            mkdirSync(dbpath)
+        }
 
         const server = ganache.server({ 
             ws: true,
             logger: {
                 log: console.log
             },
+            network_id: `${conf.chainId}`,
             // db_path: resolve(dirname(require.resolve(`../../package.json`)), `db/${conf.chainId}`),
             db_path: dbpath,
             total_accounts: 100,
             s: "TestRPC is awesome!", // I didn't choose this
             gasPrice: 0,
             // gasLimit: 10000000000000000000,
-            networkId: 420,
-            debug: false,
-            defaultBalanceEther: '100000000000000000000000000000',
+            debug: false,         
+            defaultBalanceEther: '1000000000000000',
             unlock: [0, 1],
         });
 
@@ -42,6 +45,8 @@ export class EthereumChain implements IChain {
                 else res(state)
             })
         });
+
+        console.log(`Chain http://localhost:${conf.port} networkId=${blockchainState.net_version}`)
 
         var accounts = blockchainState.accounts;
         var addresses = Object.keys(accounts);

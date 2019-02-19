@@ -32,6 +32,10 @@ class AccountsConfig implements IAccountsConfig {
                 addresses.push(
                     ...await subprovider.getAccountsAsync(1)
                 )
+            } else if(accountConf.type == 'donate') {
+                addresses.push(
+                    accountConf.address.toLowerCase()
+                )
             }
         }
         
