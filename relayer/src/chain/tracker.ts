@@ -16,6 +16,7 @@ interface MessageSentEvent extends Event {
     toBridge: chainId;
     data: ITokenBridgeEventArgs;
     eventHash: string;
+    fromChain: chainId
 }
 
 interface ChainEvents {

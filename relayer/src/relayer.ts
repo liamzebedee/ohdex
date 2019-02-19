@@ -12,6 +12,7 @@ import { MerkleTree, MerkleTreeProof } from "../../ts-merkle-tree/src";
 import { keccak256 } from 'ethereumjs-util';
 import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
 import { EventEmitter } from "./declarations";
+import { dehexify } from "./utils";
 
 interface ChainConfig {
     chainType: 'ethereum';
@@ -88,10 +89,8 @@ export class Relayer {
 
         // start state update loop
         Object.values(this.chains).map(chain => {
-            chain.listen()
-            
             chain.events.on('EventEmitter.EventEmitted', async (ev: EventEmittedEvent) => {
-                await this.updateStateRoots(chain.id)
+                await this.updateStateRoots()
             })
 
             chain.events.on('ITokenBridge.TokensBridgedEvent', (msg: MessageSentEvent) => {
@@ -105,11 +104,15 @@ export class Relayer {
                     this.logger.error(`Couldn't find bridge ${msg.toBridge} for cross-chain message`)
                 }
             })
+
+            chain.listen()
         });
+
+        await this.updateStateRoots()
 
     }
 
-    async updateStateRoots(chainId) {
+    async updateStateRoots() {
         let roots: { 
             [k: string]: StateLeaf
         } = {};
@@ -133,11 +136,21 @@ export class Relayer {
                 // let leaf = state.layers[0][leafIdx]
                 
                 if(!state.verifyProof(proof, proof.leaf)) throw new Error;
-
-                return await chain.updateStateRoot(
+                
+                try {
+                await chain.updateStateRoot(
                     proof,
-                    roots[chain.id]
+                    roots[chain.id],
+                    (fromChain: string, evHash: string) => {
+                        let tree = roots[fromChain].eventsTree;
+                        let proof = tree.generateProof(tree.findLeafIndex(dehexify(evHash)))
+                        if(!tree.verifyProof(proof, proof.leaf)) throw new Error;
+                        return proof;
+                    }
                 )
+                } catch(ex) {
+                    this.logger.error(ex)
+                }
             })
         )
 
