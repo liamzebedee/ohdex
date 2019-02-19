@@ -1,17 +1,19 @@
 {
     "compilerOptions": {
         "lib": [
-            "es6",
-            "es2017.string"
+            "es2018",
+            "dom"
         ],
         "typeRoots": [
-          "node_modules/@0x/typescript-typings/types",
           "node_modules/@types"
         ],
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
         "module": "commonjs",
-
-    }
+        "inlineSourceMap": true
+    },
+    "exclude": [
+        "node_modules/**"
+    ]
 }

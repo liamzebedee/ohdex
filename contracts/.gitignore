@@ -2,3 +2,4 @@ build/
 client/src/contracts
 node_modules
 test/env
+lib
