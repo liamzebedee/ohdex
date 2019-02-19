@@ -67,7 +67,7 @@ async function deploy(configMgr: ConfigManager) {
         networks = [process.env.NETWORK]
     }
 
-    console.log(`Deploying to ${networks.length} neworks`)
+    console.log(`Deploying to ${networks.length} networks`)
 
     await Promise.all(networks.map(net => {
         return _deploy(configMgr, net)
@@ -85,7 +85,7 @@ async function _deploy(configMgr: ConfigManager, network: string) {
     let account;
 
     pe = new Web3ProviderEngine();
-    // pe.addProvider(new PrivateKeyWalletSubprovider(privateKey));
+     pe.addProvider(new PrivateKeyWalletSubprovider(privateKey));
     pe.addProvider(new RPCSubprovider(config.rpcUrl));
     pe.start()
     web3 = new Web3Wrapper(pe);
