@@ -6,6 +6,7 @@ const initialState = {
     tokenAddress: "",
     tokenAddressValid: false,
     tokenAmount: "",
+    bridgingNative: false,
     bridgingBack: false,
     originTokenAddress: "",
     tokenAmountValid: false,
@@ -25,6 +26,10 @@ const mapping = {
         ...state,
         tokenAddress: action.tokenAddress,
         tokenAddressValid: action.tokenAddressValid,
+    }),
+    [bridgeActionTypes.TOGGLE_BRIDGING_NATIVE]: (state:any, action:any) => ({
+        ...state,
+        bridgingNative: !state.bridgingNative,
     }),
     [bridgeActionTypes.SET_TOKEN_AMOUNT]: (state:any, action:any) => ({
         ...state,

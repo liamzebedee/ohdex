@@ -19,29 +19,30 @@ class AmountSelector extends React.Component<any> {
 
     componentDidMount() {
         const {drizzle, drizzleState} = this.props;
-        const {tokenAddress} = this.props.bridge;
+        const {tokenAddress, bridgingNative} = this.props.bridge;
         
-        // On mount add token contract to truffle
-        const contractObject = {
-            contractName: this.props.bridge.tokenAddress,
-            web3Contract: new drizzle.web3.eth.Contract(ERC20ABI, tokenAddress)
-        } 
-        drizzle.addContract(contractObject);
+        if(!bridgingNative) {
+            const contractObject = {
+                contractName: this.props.bridge.tokenAddress,
+                web3Contract: new drizzle.web3.eth.Contract(ERC20ABI, tokenAddress)
+            } 
+            drizzle.addContract(contractObject);
 
-        const tokenContract = drizzle.contracts[tokenAddress];
-        const dataKey = tokenContract.methods.balanceOf.cacheCall(drizzleState.accounts[0]);
+            const tokenContract = drizzle.contracts[tokenAddress];
+            const dataKey = tokenContract.methods.balanceOf.cacheCall(drizzleState.accounts[0]);
 
-        this.setState({
-            dataKey
-        })
+            this.setState({
+                dataKey
+            })
 
-        this.setCanContinue();
-        this.setBridgeBack();
+            this.setCanContinue();
+            this.setBridgeBack();
+        }
     }
 
     render() {
         const {classes, drizzle, drizzleState} = this.props;
-        const {tokenAmount} = this.props.bridge
+        const {tokenAmount, bridgingNative} = this.props.bridge
 
         let balance = "Loading....";
 
@@ -50,7 +51,6 @@ class AmountSelector extends React.Component<any> {
             
             const data = drizzleState.contracts[this.props.bridge.tokenAddress].balanceOf[this.state.dataKey];
             
-            // data not present yet
             if(!data) {
                 balance = "Loading...."
             } else {
@@ -58,6 +58,9 @@ class AmountSelector extends React.Component<any> {
                 this.balance = balance;
             }
 
+        } else if(bridgingNative) {
+            balance = fromWei(drizzleState.accountBalances[drizzleState.accounts[0]]);
+            this.balance = balance;
         }
     
         return(
