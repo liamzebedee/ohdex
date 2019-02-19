@@ -333,34 +333,38 @@ export class EthereumChainTracker extends ChainTracker {
                 let _eventsPaths = eventsProof.paths;
 
                 if(ev.toBridge == this.escrowContract.address) {
-                    this.escrowContract.claim.sendTransactionAsync(
-                        ev.data.token, 
-                        ev.data.receiver, 
-                        ev.data.amount, 
-                        ev.data.chainId, 
-                        ev.data._salt, 
-                        _proofs, 
-                        _paths, 
-                        _interchainStateRoot, 
-                        _eventsProof, 
-                        _eventsPaths, 
-                        _eventsRoot
-                    )
+                    await this.web3Wrapper.awaitTransactionSuccessAsync(
+                        await this.escrowContract.claim.sendTransactionAsync(
+                            ev.data.token, 
+                            ev.data.receiver, 
+                            ev.data.amount, 
+                            ev.data.chainId, 
+                            ev.data._salt, 
+                            _proofs, 
+                            _paths, 
+                            _interchainStateRoot, 
+                            _eventsProof, 
+                            _eventsPaths, 
+                            _eventsRoot
+                        )
+                    );
                 }
                 else if(ev.toBridge == this.bridgeContract.address) {
-                    this.escrowContract.claim.sendTransactionAsync(
-                        ev.data.token, 
-                        ev.data.receiver, 
-                        ev.data.amount, 
-                        ev.data.chainId, 
-                        ev.data._salt, 
-                        _proofs, 
-                        _paths, 
-                        _interchainStateRoot, 
-                        _eventsProof, 
-                        _eventsPaths, 
-                        _eventsRoot
-                    )
+                    await this.web3Wrapper.awaitTransactionSuccessAsync(
+                        await this.bridgeContract.claim.sendTransactionAsync(
+                            ev.data.token, 
+                            ev.data.receiver, 
+                            ev.data.amount, 
+                            ev.data.chainId, 
+                            ev.data._salt, 
+                            _proofs, 
+                            _paths, 
+                            _interchainStateRoot, 
+                            _eventsProof, 
+                            _eventsPaths, 
+                            _eventsRoot
+                        )
+                    );
                 }
             }
 
