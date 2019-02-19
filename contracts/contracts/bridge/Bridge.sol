@@ -29,7 +29,7 @@ contract Bridge is Ownable, ITokenBridge {
     
     function claim(
         address _token,
-        address _receiver,
+        address payable _receiver,
         uint256 _amount,
         uint256 _chainId,
         uint256 _salt,
