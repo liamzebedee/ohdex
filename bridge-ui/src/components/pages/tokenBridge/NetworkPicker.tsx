@@ -3,6 +3,7 @@ import {FormControl, InputLabel, Select, MenuItem, withStyles, Typography, Butto
 import networks from "../../../../../config/networks";
 import {connect} from 'react-redux';
 import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
+import { node } from 'prop-types';
 
 
 const styles = (theme:any) => ({
@@ -124,7 +125,9 @@ class NetworkPicker extends React.Component<any> {
         const {currentChain} = this.state;
         const {chainA, chainB} = this.props.bridge;
 
-        const canContinue = currentChain == chainA && chainA != chainB && this.getChainSupported(chainA) && this.getChainSupported(chainB);
+        // HACK(liamz)
+        const currentChainValid = (currentChain == chainA) || process.env.NODE_ENV == 'development';
+        const canContinue = currentChainValid && chainA != chainB && this.getChainSupported(chainA) && this.getChainSupported(chainB);
 
         this.props.dispatch({
             type: bridgeActionTypes.SET_CAN_CONTINUE,
@@ -168,6 +171,9 @@ class NetworkPicker extends React.Component<any> {
     }
 
     getChainSupported(chainId:number) {
+        console.log(`Development environment - accepting any chains`)
+        if(process.env.NODE_ENV == 'development') return true;
+
         const chains = this.getChains();
 
         for(let i = 0; i < chains.length; i ++) {

@@ -1,6 +1,17 @@
 import { Relayer } from "./relayer";
 
-let relayer = new Relayer(require("../../config/networks.json"))
+let networks: any;
+
+switch(process.env.NODE_ENV) {
+    case 'development':
+        networks = require('../../config/test_networks')
+        break;
+    default:
+        networks = require('../../config/networks')
+        break;
+}
+
+let relayer = new Relayer(networks)
 relayer.start()
 
 process.on('SIGTERM', async () => {

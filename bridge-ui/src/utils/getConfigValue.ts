@@ -1,4 +1,14 @@
-import networks from '../../../config/networks';
+
+let networks: any;
+
+switch(process.env.NODE_ENV) {
+    case 'development':
+        networks = require('../../../config/test_networks')
+        break;
+    default:
+        networks = require('../../../config/networks')
+        break;
+}
 
 export default (networkId:Number, configValue:string) => {
     const keys = Object.keys(networks);
