@@ -311,21 +311,16 @@ export class EthereumChainTracker extends ChainTracker {
                     this.logger.info(`Skipping ${ev.eventHash}, not ack'd yet on this chain`)
                     return
                 }
-                // TODO lastIndexOf is quick hack
-                // let evIdx = this.eventsEmitted.lastIndexOf(dehexify(ev.eventHash));
-
-                let proof = interchainState.proofs[ev.fromChain]
-                let _proofs = proof.proofs.map(hexify)
-                let _paths = proof.paths;
-                let _interchainStateRoot = hexify(proof.root);
                 
-
-                let eventsTree = interchainState.roots[ev.fromChain].eventsTree;
-                let eventsProof = eventsTree.generateProof(eventsTree.findLeafIndex(dehexify(ev.eventHash)))
-                if(!eventsTree.verifyProof(eventsProof, eventsProof.leaf)) throw new Error;
-                let _eventsRoot = hexify(eventsTree.root())
-                let _eventsProof = eventsProof.proofs.map(hexify);
-                let _eventsPaths = eventsProof.paths;
+                let {
+                    _proofs,
+                    _paths,
+                    _interchainStateRoot,
+                    _eventsProof,
+                    _eventsPaths,
+                    _eventsRoot,
+                    _eventHash
+                } = interchainState.getEventProof(ev.fromChain, ev.eventHash)
 
 
                 if(ev.toBridge == this.escrowContract.address) {
@@ -365,6 +360,8 @@ export class EthereumChainTracker extends ChainTracker {
                         )
                     );
                     this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
+                } else {
+                    this.logger.error(`couldn't find bridge ${ev.toBridge} for event ${ev.eventHash}`)
                 }
             }
         } catch(ex) {
