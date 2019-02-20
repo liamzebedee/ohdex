@@ -20,6 +20,7 @@ import { MerkleTree, MerkleTreeProof } from "../../../../ts-merkle-tree/src";
 import { keccak256 } from 'ethereumjs-util';
 import { EtherscanProvider } from "ethers/providers";
 import { BaseContract } from "@0x/base-contract";
+import { InterchainState } from "../../interchain";
 
 const AbiCoder = require('web3-eth-abi').AbiCoder();
 
@@ -64,7 +65,7 @@ export class EthereumChainTracker extends ChainTracker {
         this.logger.info('Connecting')
 
         this.pe = new Web3ProviderEngine();
-        this.pe.addProvider(new PrivateKeyWalletSubprovider("04EA60B5D7E1ABDD2E96A36CCD07E272CF785EB5F65C8447FE6DCA6953EE3C80"));
+        this.pe.addProvider(new PrivateKeyWalletSubprovider("13d14e5f958796529e84827f6a62d8e19375019f8cf0110484bcef39c023edcc"));
         this.pe.addProvider(new RPCSubprovider(this.conf.rpcUrl));
         this.pe.start()
 
@@ -294,8 +295,82 @@ export class EthereumChainTracker extends ChainTracker {
     }
 
     private async onStateRootUpdated(root: string, ev: ethers.Event) {
+        this.events.emit('StateRootUpdated');
         this.logger.info(`state root updated - ${root}`)
         this.interchainStateRoot = dehexify(root);
+    }
+
+    async processBridgeEvents(
+        interchainState: InterchainState
+    ) {
+        // process all events
+        try {
+            // Now process any events on this bridge for the user
+            for(let ev of this.pendingTokenBridgingEvs) {
+                if(!interchainState.isEventAcknowledged(ev.fromChain, ev.eventHash)) {
+                    this.logger.info(`Skipping ${ev.eventHash}, not ack'd yet on this chain`)
+                    return
+                }
+                // TODO lastIndexOf is quick hack
+                // let evIdx = this.eventsEmitted.lastIndexOf(dehexify(ev.eventHash));
+
+                let proof = interchainState.proofs[ev.fromChain]
+                let _proofs = proof.proofs.map(hexify)
+                let _paths = proof.paths;
+                let _interchainStateRoot = hexify(proof.root);
+                
+
+                let eventsTree = interchainState.roots[ev.fromChain].eventsTree;
+                let eventsProof = eventsTree.generateProof(eventsTree.findLeafIndex(dehexify(ev.eventHash)))
+                if(!eventsTree.verifyProof(eventsProof, eventsProof.leaf)) throw new Error;
+                let _eventsRoot = hexify(eventsTree.root())
+                let _eventsProof = eventsProof.proofs.map(hexify);
+                let _eventsPaths = eventsProof.paths;
+
+
+                if(ev.toBridge == this.escrowContract.address) {
+                    await this.web3Wrapper.awaitTransactionSuccessAsync(
+                        await this.escrowContract.claim.sendTransactionAsync(
+                            ev.data.token, 
+                            ev.data.receiver, 
+                            ev.data.amount, 
+                            ev.data.chainId, 
+                            ev.data._salt, 
+                            _proofs, 
+                            _paths, 
+                            _interchainStateRoot, 
+                            _eventsProof, 
+                            _eventsPaths, 
+                            _eventsRoot,
+                            { from: this.account }
+                        )
+                    );
+                    this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
+                }
+                else if(ev.toBridge == this.bridgeContract.address) {
+                    await this.web3Wrapper.awaitTransactionSuccessAsync(
+                        await this.bridgeContract.claim.sendTransactionAsync(
+                            ev.data.token, 
+                            ev.data.receiver, 
+                            ev.data.amount, 
+                            ev.data.chainId, 
+                            ev.data._salt, 
+                            _proofs, 
+                            _paths, 
+                            _interchainStateRoot, 
+                            _eventsProof, 
+                            _eventsPaths, 
+                            _eventsRoot,
+                            { from: this.account }
+                        )
+                    );
+                    this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
+                }
+            }
+        } catch(ex) {
+            this.logger.error(`failed to do bridging`)
+            this.logger.error(ex)
+        }
     }
 
     private async onEventEmitted(eventHash: string, ev: ethers.Event) {
@@ -320,7 +395,8 @@ export class EthereumChainTracker extends ChainTracker {
         let data: ITokenBridgeEventArgs = {
             eventHash, targetBridge, chainId, receiver, token, amount, _salt
         }
-        this.logger.info(data)
+        this.logger.info(
+            JSON.stringify(data))
 
         let tokensBridgedEv: MessageSentEvent = {
             data,
@@ -370,8 +446,9 @@ export class EthereumChainTracker extends ChainTracker {
 
     async updateStateRoot(
         proof: MerkleTreeProof, stateLeafItems: StateLeaf, 
-        computeEventProof: (fromChain: string, evHash: string) => MerkleTreeProof
-        ): Promise<any> 
+        // computeEventProof: (fromChain: string, evHash: string) => { eventsProof: MerkleTreeProof, altEventsRoot: string },
+        // getStateInfo: (fromChain: string) => MerkleTreeProof
+    ): Promise<any> 
     {
         let itemArgs: string[] = stateLeafItems.items.map(item => AbiCoder.encodeParameter('bytes32', item))
         let _proofs = proof.proofs.map(hexify)
@@ -391,59 +468,6 @@ export class EthereumChainTracker extends ChainTracker {
                 )
             )
             this.interchainStateRoot = dehexify(_newInterchainStateRoot)
-
-            // Now process any events on this bridge for the user
-            for(let ev of this.pendingTokenBridgingEvs) {
-                // TODO lastIndexOf is quick hack
-                // let evIdx = this.eventsEmitted.lastIndexOf(dehexify(ev.eventHash));
-
-                // let eventsProof = this.eventsTree.generateProof(
-                //     evIdx
-                // );
-                let eventsProof = computeEventProof(ev.fromChain, ev.eventHash);
-                let _eventsProof = eventsProof.proofs.map(hexify);
-                let _eventsPaths = eventsProof.paths;
-
-                if(ev.toBridge == this.escrowContract.address) {
-                    await this.web3Wrapper.awaitTransactionSuccessAsync(
-                        await this.escrowContract.claim.sendTransactionAsync(
-                            ev.data.token, 
-                            ev.data.receiver, 
-                            ev.data.amount, 
-                            ev.data.chainId, 
-                            ev.data._salt, 
-                            _proofs, 
-                            _paths, 
-                            _interchainStateRoot, 
-                            _eventsProof, 
-                            _eventsPaths, 
-                            _eventsRoot,
-                            { from: this.account }
-                        )
-                    );
-                    this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
-                }
-                else if(ev.toBridge == this.bridgeContract.address) {
-                    await this.web3Wrapper.awaitTransactionSuccessAsync(
-                        await this.bridgeContract.claim.sendTransactionAsync(
-                            ev.data.token, 
-                            ev.data.receiver, 
-                            ev.data.amount, 
-                            ev.data.chainId, 
-                            ev.data._salt, 
-                            _proofs, 
-                            _paths, 
-                            _interchainStateRoot, 
-                            _eventsProof, 
-                            _eventsPaths, 
-                            _eventsRoot,
-                            { from: this.account }
-                        )
-                    );
-                    this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
-                }
-            }
-
         } catch(err) {
             // console.log(ex)
             // if(err.code == -32000) {

@@ -8,11 +8,10 @@ const { combine, label, json, simple } = format;
 // import { MerkleTree } from 'typescript-solidity-merkle-tree';
 import { MerkleTree, MerkleTreeProof } from "../../ts-merkle-tree/src";
 
-// @ts-ignore
-import { keccak256 } from 'ethereumjs-util';
 import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
 import { EventEmitter } from "./declarations";
 import { dehexify } from "./utils";
+import { InterchainState } from "./interchain";
 
 interface ChainConfig {
     chainType: 'ethereum';
@@ -108,56 +107,52 @@ export class Relayer {
             chain.listen()
         });
 
+
         await this.updateStateRoots()
 
     }
 
     async updateStateRoots() {
-        let roots: { 
-            [k: string]: StateLeaf
-        } = {};
+        let interchainState = new InterchainState()
+        
         Object.values(this.chains).map(chain => {
-            roots[chain.id] = chain.getStateLeaf()
+            interchainState.addChain(chain.id, chain.getStateLeaf())
         });
-        let items = Object.values(roots).map(root => root._leaf);
+        interchainState.computeState()
 
-        let state = new MerkleTree(
-            items,
-            keccak256
-        );
-        this.logger.info(`Computed new interchain state root: ${hexify(state.root())}`)
+        this.logger.info(`Computed new interchain state root: ${hexify(interchainState.globalState.root())}`)
         
         let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chainId)
         
         await Promise.all(
             chainsToUpdate.map(async chain => {
-                let leafIdx = Object.keys(roots).indexOf(chain.id)
-                let proof = state.generateProof(leafIdx)
-                // let leaf = state.layers[0][leafIdx]
-                
-                if(!state.verifyProof(proof, proof.leaf)) throw new Error;
+                let proof = interchainState.proofs[chain.id];
+                let root = interchainState.roots[chain.id]
                 
                 try {
-                await chain.updateStateRoot(
-                    proof,
-                    roots[chain.id],
-                    (fromChain: string, evHash: string) => {
-                        let tree = roots[fromChain].eventsTree;
-                        let proof = tree.generateProof(tree.findLeafIndex(dehexify(evHash)))
-                        if(!tree.verifyProof(proof, proof.leaf)) throw new Error;
-                        return proof;
-                    }
-                )
+                    console.log(chain.id, 0)
+                    await chain.updateStateRoot(
+                        proof,
+                        root
+                    );
+
+                    console.log(chain.id, 1)
+
+                    chain.events.once('StateRootUpdated', async () => {
+                        await chain.processBridgeEvents(
+                            interchainState
+                        )
+                    })
+                    
                 } catch(ex) {
                     this.logger.error(ex)
                 }
             })
         )
-
-        return state;
     }
 
     async stop() {
         await Promise.all(Object.values(this.chains).map(chain => chain.stop));
     }
 }
+

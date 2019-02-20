@@ -21,7 +21,8 @@ interface MessageSentEvent extends Event {
 
 interface ChainEvents {
     "EventEmitter.EventEmitted": EventEmittedEvent,
-    "ITokenBridge.TokensBridgedEvent": MessageSentEvent
+    "ITokenBridge.TokensBridgedEvent": MessageSentEvent,
+    "StateRootUpdated": any
 }
 
 abstract class IChainTracker {
