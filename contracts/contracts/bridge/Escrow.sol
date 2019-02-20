@@ -25,6 +25,10 @@ contract Escrow is Ownable, ITokenBridge {
         _createBridgeTokenEvent(_targetBridge, _receiver, _token, _amount, _chainId, _salt);
     }
 
+    function bridgeNative(bytes32 _targetBridge, address _receiver, uint256 _chainId, uint256 _salt) public payable {
+        _createBridgeTokenEvent(_targetBridge, _receiver, address(0), msg.value, _chainId, _salt);
+    }
+
     function initNetwork(address _bridgeContract, uint256 _chainId) public onlyOwner {
         require(chainToBridgeContract[_chainId] == address(0), "CHAIN_ALREADY_INITIALISED");
         chainToBridgeContract[_chainId] = _bridgeContract;
@@ -32,7 +36,7 @@ contract Escrow is Ownable, ITokenBridge {
 
     function claim(
         address _token,
-        address _receiver,
+        address payable _receiver,
         uint256 _amount,
         uint256 _chainId,
         uint256 _salt,
@@ -61,7 +65,12 @@ contract Escrow is Ownable, ITokenBridge {
             eventHash
         ), "EVENT_NOT_FOUND");
 
-        IERC20(_token).transfer(_receiver, _amount);
+        if(_token == address(0)) {
+            _receiver.send(_amount); // do nothing upon failure 
+        } else {
+            IERC20(_token).transfer(_receiver, _amount);
+        }
+        
         emit OriginTokensClaimed(_token, _receiver, _amount, _chainId, _salt);
     }
 

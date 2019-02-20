@@ -31,7 +31,7 @@ class TokenReceiver extends React.Component<any> {
             canContinue: false,
         })
         
-        const {tokenAddress, tokenAmount, chainB, chainA, bridgingBack, originTokenAddress} = this.props.bridge;
+        const {tokenAddress, tokenAmount, chainB, chainA, bridgingBack, bridgingNative, originTokenAddress} = this.props.bridge;
         const {drizzle, drizzleState} = this.props;
 
         
@@ -49,10 +49,17 @@ class TokenReceiver extends React.Component<any> {
 
         if(!bridgingBack) {
             const Escrow = drizzle.contracts.Escrow;
-            const approveTxId = drizzle.contracts[tokenAddress].methods.approve.cacheSend(Escrow.address, weiTokenAmount, {from});
-            // address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt
-            console.log(padLeft(getConfigValue(chainB, 'bridgeAddress'), 64), tokenAddress, from, weiTokenAmount, chainB, salt);
-            const bridgeTxId = Escrow.methods.bridge.cacheSend(padLeft(getConfigValue(chainB, 'bridgeAddress'), 64), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
+
+            let approveTxId:string;
+            let bridgeTxId:string;
+
+            if(!bridgingNative) {
+                approveTxId = drizzle.contracts[tokenAddress].methods.approve.cacheSend(Escrow.address, weiTokenAmount, {from});
+                bridgeTxId = Escrow.methods.bridge.cacheSend(padLeft(getConfigValue(chainB, 'bridgeAddress'), 64), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            } else {
+                approveTxId = "";
+                bridgeTxId = Escrow.methods.bridgeNative.cacheSend(padLeft(getConfigValue(chainB, 'bridgeAddress'), 64), from, chainB, salt, {from, value: weiTokenAmount});
+            }
 
             this.setState({
                 approveTxId,
@@ -61,7 +68,7 @@ class TokenReceiver extends React.Component<any> {
 
             // event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
             const bridge = new ethers.Contract(getConfigValue(chainB, "bridgeAddress"), BridgeABI, this.chainBProvider);
-            const filter = bridge.filters.BridgedTokensClaimed(tokenAddress, from, null, chainA, null);
+            const filter = bridge.filters.BridgedTokensClaimed(bridgingNative ? "0x0000000000000000000000000000000000000000" : tokenAddress, from, null, chainA, null);
             bridge.on(filter, this.tokensClaimed);
         } else {
             // TODO Test this code
@@ -118,6 +125,7 @@ class TokenReceiver extends React.Component<any> {
 
     bridgingState() {
         const {drizzleState} = this.props;
+        const {bridgingBack, bridgingNative} = this.props.bridge;
         const {transactions, transactionStack} = drizzleState;
         const {approveTxId, bridgeTxId, success} = this.state;
 
@@ -125,13 +133,16 @@ class TokenReceiver extends React.Component<any> {
         let stateMessage = "";
         let progress = 0; 
 
-        if(approveTxId == "" || bridgeTxId == "" || !transactions[transactionStack[approveTxId]] || !transactions[transactionStack[bridgeTxId]]) {
+        const checkApproval = !(bridgingNative || bridgingBack);
+        // TODO make this code easier to read
+        //  If not bridging back or native check for approve tx always check bridge tx
+        if((checkApproval && (approveTxId == "" || !transactions[transactionStack[approveTxId]])) || bridgeTxId == "" || !transactions[transactionStack[bridgeTxId]]) {
             stateMessage = "Awaiting transaction approval";
             progress = 0;
-        } else if (transactions[transactionStack[approveTxId]].status == "pending" || transactions[transactionStack[bridgeTxId]].status == "pending" ) {
+        } else if ( (checkApproval && transactions[transactionStack[approveTxId]].status == "pending") || transactions[transactionStack[bridgeTxId]].status == "pending" ) {
             stateMessage = "Awaiting confirmation of transactions";
             progress = 25;
-        } else if (transactions[transactionStack[approveTxId]].status == "success" || transactions[transactionStack[bridgeTxId]].status == "success" && !success) {
+        } else if ( (checkApproval && transactions[transactionStack[approveTxId]].status == "success") || transactions[transactionStack[bridgeTxId]].status == "success" && !success) {
             stateMessage = "Transactions confirmed waiting for relayers to bridge tokens";
             progress = 50;
         } 
