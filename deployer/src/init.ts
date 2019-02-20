@@ -5,11 +5,9 @@ import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 import { prependListener } from "cluster";
 import {promises as fs} from "fs";
 
-
-
-import {
-    EscrowContract
-}  from '../../contracts/build/wrappers/escrow'
+// import {
+//     EscrowContract
+// }  from '../../contracts/build/wrappers/escrow'
 
 import {
     BridgeContract
@@ -18,17 +16,17 @@ import {
 const networkA = process.env.NETWORK_A;
 const networkB = process.env.NETWORK_B;
 
-let completeConfig = require("../config/networks.json");
+let completeConfig = require("../../config/networks.json");
 let configA = completeConfig[networkA];
 let configB = completeConfig[networkB];
 
 
-const privateKey = require("../config/accounts.json").deployAccountPrivateKey;
+const privateKey = require("../../config/accounts.json").deployAccountPrivateKey;
 
 init();
 
 function getAbi(name:string) {
-    return require(`../contracts/build/contracts/${name}.json`).abi;
+    return require(`../../contracts/build/contracts/${name}.json`).abi;
 }
 
 async function init() {
@@ -44,16 +42,16 @@ async function init() {
     accounts = await web3.getAvailableAddressesAsync();
     account = accounts[0];
 
-    const escrow = new EscrowContract(getAbi("Escrow"), configA.escrowAddres, pe, {from: account});
+    // const escrow = new EscrowContract(getAbi("Escrow"), configA.escrowAddres, pe, {from: account});
     const bridge = new BridgeContract(getAbi("Bridge"), configA.bridgeAddress, pe, {from: account});
 
-    console.log("Initiating Escrow");
-    try {
-        const txId = await escrow.initNetwork.sendTransactionAsync(configB.bridgeAddress, configB.chainId, {from: account, gas: 100000});
-        await web3.awaitTransactionMinedAsync(txId);
-    } catch(e) {
-        console.error(e);
-    }
+    // console.log("Initiating Escrow");
+    // try {
+    //     const txId = await escrow.initNetwork.sendTransactionAsync(configB.bridgeAddress, configB.chainId, {from: account, gas: 100000});
+    //     await web3.awaitTransactionMinedAsync(txId);
+    // } catch(e) {
+    //     console.error(e);
+    // }
     console.log("Initiating Bridge");
     try {
         const txId = await bridge.initNetwork.sendTransactionAsync(configB.escrowAddress, configB.chainId, {from: account, gas:100000});

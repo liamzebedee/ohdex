@@ -3,30 +3,30 @@
         "chainId": 42,
         "chainType": "ethereum",
         "rpcUrl": "https://kovan.infura.io/v3/076b582fd6164444af0b426614496e15",
-        "eventEmitterAddress": "0xfc792a2cfcfb0380897fd789225a8b046a7c832b",
-        "eventListenerAddress": "0x8250adf41fdff5a9a4f3fdd3a5a8e4fc7d3023c7",
+        "eventEmitterAddress": "0x707e77a7be976cb1d544066b37080b4611288479",
+        "eventListenerAddress": "0x575121ed0ce9ff5f746edf7d1003f3c4daa54cab",
         "escrowAddress": "0x170cc014847e267dbffd4bd6e80c815832e00624",
-        "bridgeAddress": "0xd0f9fea67bc38ff571bc5b5e13514b636311606c",
+        "bridgeAddress": "0x4996ff9e48e7089b94b7cdc1246832ffb66fa14f",
         "confirmationsNeeded": 1,
         "batchSize": 1,
         "eventUtilAddress": "0x5f4cd2bda61fc59a844c4aea8e9a2062a68e3ba3",
-        "wethToken": "0xff93dc2b33521080fe64e783aed8b6e2994e9dbe",
-        "aliceToken": "0x2dd319dd43c531959eaf4fc06e97c5942154a0c2",
-        "bobToken": "0xebbcaa2be9c4291da67d153101ae289c2c0c74e6"
+        "wethToken": "0xa09292a1bbd97fdf0fbb9dbe37fe7cb4e3650984",
+        "aliceToken": "0x1ca97a52db4bb1c020dd84c284aae72e1dc889ad",
+        "bobToken": "0xe53b26aa3012d404d3dbd51b2542702285106261"
     },
     "rinkeby": {
         "chainId": 4,
         "chainType": "ethereum",
         "rpcUrl": "https://rinkeby.infura.io/v3/076b582fd6164444af0b426614496e15",
-        "eventEmitterAddress": "0x609235a4802518350b4c700a33bf9d38afecc81e",
-        "eventListenerAddress": "0xc0867513db68eebea09119a23b42b0264b40160d",
+        "eventEmitterAddress": "0x8309db9a59f90906c4dddae39c0c332b63de8ce3",
+        "eventListenerAddress": "0x62392827a6aba48bceef1dd433f44d5909b6feb9",
         "escrowAddress": "0x89689ae61eb283b56a499aa02c39cb952e698663",
-        "bridgeAddress": "0xd81791b3e68bcf2d263bae093dcbd0efbe38e015",
+        "bridgeAddress": "0x7d460a7790e8c696650afae0ab35b4bd58a9b319",
         "confirmationsNeeded": 1,
         "batchSize": 1,
         "eventUtilAddress": "0xbb7f31260f0181817b891347dded7f96ca28cc1f",
-        "wethToken": "0xcf66899b6aae4e44577267737ccb8a8ca912ed41",
-        "aliceToken": "0xf9b2bc633486bbcbae859a80ef6ee2dd026a8b57",
-        "bobToken": "0x5ed71c0f424e559b1296768bd51eec12a9eb2733"
+        "wethToken": "0x8923eae5296e21ecff275dd62f4f2767d9de4cf0",
+        "aliceToken": "0xb8ed386520c9f20cd64445ff6893b9eb3d72f4b5",
+        "bobToken": "0x67385595ad689f698cb2a0a788666b939d63bf43"
     }
 }

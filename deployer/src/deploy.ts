@@ -114,17 +114,17 @@ async function _deploy(configMgr: ConfigManager, network: string) {
     )
 
 
-    // 4 Deploy Escrow
+    // // 4 Deploy Escrow
 
-    // @ts-ignore
-    let escrow = await EscrowContract.deployAsync(
-        ...getDeployArgs('Escrow', pe, account),
-        config.chainId,
-        eventListener.address,
-        eventEmitter.address
-    );
+    // // @ts-ignore
+    // let escrow = await EscrowContract.deployAsync(
+    //     ...getDeployArgs('Escrow', pe, account),
+    //     config.chainId,
+    //     eventListener.address,
+    //     eventEmitter.address
+    // );
 
-    // 5 Deploy Bridge
+    // 4 Deploy Bridge
 
     // @ts-ignore
     let bridge = await BridgeContract.deployAsync(
@@ -138,7 +138,7 @@ async function _deploy(configMgr: ConfigManager, network: string) {
     // config.eventUtilAddress = eventUtil.address;
     config.eventEmitterAddress = eventEmitter.address;
     config.eventListenerAddress = eventListener.address;
-    config.escrowAddress = escrow.address;
+    // config.escrowAddress = escrow.address;
     config.bridgeAddress = bridge.address;
 
     // @ts-ignore
