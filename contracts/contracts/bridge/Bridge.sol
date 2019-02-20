@@ -4,6 +4,7 @@ import "../events/EventListener.sol";
 import "../events/EventEmitter.sol";
 import "../BridgedToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "../libs/LibEvent.sol";
 import "./ITokenBridge.sol";
 
@@ -11,7 +12,7 @@ contract Bridge is Ownable, ITokenBridge {
     struct Network {
         mapping(address => address) tokenToBridgedToken;
         mapping(address => address) bridgedTokenToToken;
-        address escrowContract;
+        address bridgeContract;
     }
 
     mapping(address => uint256) bridgedTokenToNetwork;
@@ -19,7 +20,7 @@ contract Bridge is Ownable, ITokenBridge {
     mapping(uint256 => Network) networks;
     mapping(bytes32 => bool) public processedEvents;
 
-    event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
+    event TokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
 
     constructor(uint256 _chainId, address _eventListener, address _eventEmitter) ITokenBridge() public {
         chainId = _chainId;
@@ -56,27 +57,42 @@ contract Bridge is Ownable, ITokenBridge {
             _eventsRoot,
             eventHash
         ), "EVENT_NOT_FOUND");
-
         
-        // get or create the token contract
-        BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
-        require(address(bridgedToken) != address(0), "INVALID_TOKEN_ADDRESS");
-
-        // mint the tokens
-        bridgedToken.mint(_receiver, _amount);
-        emit BridgedTokensClaimed(_token, _receiver, _amount, _chainId, _salt);
+        // TODO Make this work with claiming native tokens and less hacky
+        // if token is a contract and is not a bridged token use transfer
+        if(isContract(_token) && networks[_chainId].tokenToBridgedToken[_token] == address(0)) {
+            IERC20(_token).transfer(_receiver, _amount);
+        } else {
+            // get or create the token contract
+            BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
+            require(address(bridgedToken) != address(0), "INVALID_TOKEN_ADDRESS");
+            // mint the tokens
+            bridgedToken.mint(_receiver, _amount);
+        }
+        
+        emit TokensClaimed(_token, _receiver, _amount, _chainId, _salt);
     }
 
-    function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {                
-        BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
-        bridgedToken.burn(msg.sender, _amount);
-
+    function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
+        // If token is not a bridged token being bridged back escrow the tokens.
+        if(networks[_chainId].tokenToBridgedToken[_token] == address(0)) {
+            require(IERC20(_token).transferFrom(msg.sender, address(this), _amount), "TOKEN_TRANSFER_FAILED");
+        } else { //if bridging back burn the tokens
+            BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
+            bridgedToken.burn(msg.sender, _amount);
+        }   
+ 
         _createBridgeTokenEvent(_targetBridge, _receiver, _token, _amount, _chainId, _salt);
     }
+
+    // TODO Fix bridging native tokens
+    function bridgeNative(bytes32 _targetBridge, address _receiver, uint256 _chainId, uint256 _salt) public payable {
+        _createBridgeTokenEvent(_targetBridge, _receiver, address(0), msg.value, _chainId, _salt);
+    }
     
-    function initNetwork(address _escrowContract, uint256 _chainId) public onlyOwner {
-        require(networks[_chainId].escrowContract == address(0), "CHAIN_ALREADY_INITIALISED");
-        networks[_chainId].escrowContract = _escrowContract;
+    function initNetwork(address _bridgeContract, uint256 _chainId) public onlyOwner {
+        require(networks[_chainId].bridgeContract == address(0), "CHAIN_ALREADY_INITIALISED");
+        networks[_chainId].bridgeContract = _bridgeContract;
     }
     
     function getBridgedToken(address _token, uint256 _chainId) public returns(address) { 
@@ -105,6 +121,14 @@ contract Bridge is Ownable, ITokenBridge {
     function getOriginToken(address _token) public view returns(address token, uint256 network) {
         network = bridgedTokenToNetwork[_token];
         token = networks[network].bridgedTokenToToken[_token];
+    }
+
+    function isContract(address _addr) private returns (bool isContract){
+        uint256 size;
+        assembly {
+            size := extcodesize(_addr)
+        }
+        return (size > 0);
     }
 
 }
