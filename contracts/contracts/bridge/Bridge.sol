@@ -40,9 +40,9 @@ contract Bridge is Ownable, ITokenBridge {
         bool[] memory _eventsPaths,
         bytes32 _eventsRoot
         ) public 
-    {
+    {   
         bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, chainId, _salt);
-
+        // TODO check origin address of event
         _checkEventProcessed(eventHash);
 
         // bytes32 leaf = keccak256(abi.encodePacked(networks[_chainId].escrowContract, eventHash));
@@ -57,7 +57,7 @@ contract Bridge is Ownable, ITokenBridge {
             eventHash
         ), "EVENT_NOT_FOUND");
 
-
+        
         // get or create the token contract
         BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
         require(address(bridgedToken) != address(0), "INVALID_TOKEN_ADDRESS");

@@ -42,7 +42,9 @@ contract Escrow is Ownable, ITokenBridge {
         bytes32[] memory _eventsProof,
         bool[] memory _eventsPaths,
         bytes32 _eventsRoot ) public 
-    {
+    {   
+
+        // TODO check origin address of event
 
         // bytes32 eventHash = _getTokensBridgedEventHash(_receiver, _token, _amount, chainId, _salt);
         bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, chainId, _salt);
