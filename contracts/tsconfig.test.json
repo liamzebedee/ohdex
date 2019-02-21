@@ -1,10 +1,8 @@
 {
     "extends": "./tsconfig",
     "compilerOptions": {
-        "outDir": "lib/"
     },
     "include": [
-        "test/**.ts",
-        "../ts-merkle-tree/src"
+        "test/**.ts"
     ],
 }

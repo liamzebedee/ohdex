@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "lib/",
         "lib": [
             "es2018",
             "dom"
@@ -13,6 +15,10 @@
         "module": "commonjs",
         "inlineSourceMap": true
     },
+    "references": [
+      { "path": "../ts-merkle-tree" },
+      { "path": "../contracts" }
+    ],
     "exclude": [
         "node_modules/**"
     ]

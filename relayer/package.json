@@ -1,4 +1,5 @@
 {
+    "name": "relayer",
     "scripts": {
         "start": "ts-node src/index.ts",
         "test:watch": "",
