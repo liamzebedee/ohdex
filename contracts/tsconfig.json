@@ -13,11 +13,15 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "module": "commonjs",
-        "inlineSourceMap": true
+        "inlineSourceMap": true,
+        "declaration": true,
+        "composite": true
     },
     "references": [
-      { "path": "../ts-merkle-tree" },
-      { "path": "../contracts" }
+      { "path": "../ts-merkle-tree" }
+    ],
+    "include": [
+        "./build/wrappers/*"
     ],
     "exclude": [
         "node_modules/**"

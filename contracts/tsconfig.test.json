@@ -3,6 +3,7 @@
     "compilerOptions": {
     },
     "include": [
+        "./build/wrappers/*",
         "test/**.ts"
     ],
 }

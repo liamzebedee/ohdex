@@ -16,7 +16,7 @@
     "compile": "sol-compiler contracts/",
     "compile-sol": "truffle compile --all",
     "contracts": "yarn compile && yarn abi-gen",
-    "watch:test": "tsc -W -p tsconfig.test.json",
+    "watch:test": "tsc -b -W tsconfig.json tsconfig.test.json",
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "test:Bridge": "mocha --bail --exit --full-trace --require source-map-support/register --require make-promises-safe  lib/test/Bridge.spec.js",
     "test:EventListener:old": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/EventListener.spec.ts",
