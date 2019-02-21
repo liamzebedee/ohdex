@@ -21,10 +21,8 @@ contract Bridge is Ownable, ITokenBridge {
 
     event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
 
-    constructor(uint256 _chainId, address _eventListener, address _eventEmitter) ITokenBridge() public {
+    constructor(uint256 _chainId, EventListener _eventListener, EventEmitter _eventEmitter) ITokenBridge(_eventListener, _eventEmitter) public {
         chainId = _chainId;
-        eventListener = EventListener(_eventListener);
-        eventEmitter = EventEmitter(_eventEmitter);
     }
     
     function claim(
@@ -38,11 +36,13 @@ contract Bridge is Ownable, ITokenBridge {
         bytes32 _interchainStateRoot,
         bytes32[] memory _eventsProof,
         bool[] memory _eventsPaths,
-        bytes32 _eventsRoot
+        bytes32 _eventsRoot,
+        bytes32 _eventHash
         ) public 
     {
-        bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, chainId, _salt);
-
+        bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, _chainId, _salt);
+        
+        require(eventHash == _eventHash, "EVENT_NOT_SAME");
         _checkEventProcessed(eventHash);
 
         // bytes32 leaf = keccak256(abi.encodePacked(networks[_chainId].escrowContract, eventHash));
@@ -50,7 +50,6 @@ contract Bridge is Ownable, ITokenBridge {
         require(eventListener.checkEvent(
             _proof,
             _proofPaths,
-            _interchainStateRoot,
             _eventsProof,
             _eventsPaths,
             _eventsRoot,

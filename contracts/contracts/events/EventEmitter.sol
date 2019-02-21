@@ -12,7 +12,7 @@ contract EventEmitter is MerkleTreeVerifier {
     }
 
     function emitEvent(bytes32 _eventHash) public returns(bool) {
-        require(_eventHash != 0x0, "INVALID_EVENT");
+        require(_eventHash != 0x00, "INVALID_EVENT");
         events.push(_eventHash);
         emit EventEmitted(_eventHash);
         // keccak256(abi.encodePacked(msg.sender, _eventHash)) is whats added to the merkle tree of that chain

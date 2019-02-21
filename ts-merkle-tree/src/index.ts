@@ -59,7 +59,6 @@ class MerkleTree {
 		this.leaves = leaves.map(leaf => this.hashLeaf(leaf))
 		
 		// And compute tree
-		console.log(this.leaves)
 		this.layers = this.computeTree(this.leaves);
 	}
 
@@ -189,7 +188,6 @@ function hashLeaf(hashFn: HashFunction, leaf: Buffer): Buffer {
 }
 
 function hashBranch(hashFn: HashFunction, left, right: Buffer): Buffer {
-	console.log(left,right)
 	return hashFn(Buffer.concat([BRANCH_PREFIX, left, right]))
 }
 

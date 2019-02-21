@@ -25,10 +25,10 @@ contract EventListener is MerkleTreeVerifier {
     event StateRootUpdated(bytes32 indexed root);
     event ProofSubmitted(uint256 indexed chainId, bytes32 indexed proof);
 
-    constructor(EventEmitter _emitter) public {
+    constructor(address _emitter) public {
         bytes32 nonce = keccak256(abi.encodePacked(this, blockhash(1)));
         _updateStateRoot(nonce);
-        emitter = _emitter;
+        emitter = EventEmitter(_emitter);
     }
 
     function _updateStateRoot(bytes32 root) internal {
@@ -44,19 +44,22 @@ contract EventListener is MerkleTreeVerifier {
     function checkEvent(
         bytes32[] memory proof, 
         bool[] memory paths, 
-        bytes32 _interchainStateRoot, 
+        // bytes32 _bridgeInterchainStateRoot, 
         
         bytes32[] memory _eventsProof,
         bool[] memory _eventsPaths,
         bytes32 _eventsRoot,
         bytes32 _eventHash
     ) public returns (bool) {
-        // Verify the events root for that chain's bridge.
-        bytes32 bridgeLeaf = _hashLeaf2(_interchainStateRoot, _eventsRoot);
-        require(_verify(proof, paths, _interchainStateRoot, bridgeLeaf), "STATEROOT_PROOF_INVALID");
-
+        bytes32 _eventLeaf = _hashLeaf(_eventHash);
         // Verify the event hash
-        require(_verify(_eventsProof, _eventsPaths, bridgeLeaf, _eventHash), "EVENT_PROOF_INVALID");
+        require(_verify(_eventsProof, _eventsPaths, _eventsRoot, _eventLeaf), "EVENT_PROOF_INVALID");
+
+        // Verify the events root for that chain's bridge.
+        // bytes32 bridgeLeaf = _hashLeaf2(_bridgeInterchainStateRoot, _eventsRoot);
+        bytes32 bridgeLeaf = _hashLeaf2(_eventsRoot);
+
+        require(_verify(proof, paths, interchainStateRoot, bridgeLeaf), "INVALID_INTERSTATE_2_EVENT_PROOF");
 
         return true;
     }
@@ -83,7 +86,6 @@ contract EventListener is MerkleTreeVerifier {
         bytes32[] memory _proof, 
         bool[] memory _proofPaths,
         bytes32 _newInterchainStateRoot, 
-        bytes32 _interchainStateRoot, 
         bytes32 _eventsRoot
     ) public {
         // todo
@@ -97,14 +99,14 @@ contract EventListener is MerkleTreeVerifier {
         // require(block.timestamp > stateRootUpdated, "BACK_IN_TIME_ERR");
 
         // It must reference the previous interchain state root and prove we build upon it.
-        require(_interchainStateRoot == interchainStateRoot, "INVALID_STATE_CHRONOLOGY");
+        // require(_interchainStateRoot == interchainStateRoot, "INVALID_STATE_CHRONOLOGY");
         require(_newInterchainStateRoot != interchainStateRoot, "HUH");
 
         // TODO - Verify this chain's events are acknowledged        
         // bytes32 eventsRoot = MerkleProof.computeRoot(EventEmitter.getPendingEvents());
-        require(emitter.getEventsRoot() == _eventsRoot, "EVENTS_NOT_ACKNOWLEDGED");
+        require(emitter.getEventsRoot() == _eventsRoot, "INVALID_STATE_CHRONOLOGY");
 
-        bytes32 chainLeaf = _hashLeaf2(_interchainStateRoot, _eventsRoot);
+        bytes32 chainLeaf = _hashLeaf2(_eventsRoot);
         require(_verify(_proof, _proofPaths, _newInterchainStateRoot, chainLeaf) == true, "INTERCHAIN_STATE_ROOT_PROOF_INCORRECT");
         
         _updateStateRoot(_newInterchainStateRoot);
@@ -112,8 +114,8 @@ contract EventListener is MerkleTreeVerifier {
         emitter.acknowledgeEvents();
     }
 
-    function _hashLeaf2(bytes32 b, bytes32 c) public pure returns (bytes32) {
+    function _hashLeaf2(bytes32 c) public pure returns (bytes32) {
         bytes1 LEAF_PREFIX = 0x00;
-        return keccak256(abi.encodePacked(LEAF_PREFIX, b, c));
+        return keccak256(abi.encodePacked(LEAF_PREFIX, c));
     }
 }

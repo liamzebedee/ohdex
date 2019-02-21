@@ -13,11 +13,11 @@ contract Escrow is Ownable, ITokenBridge {
 
     event OriginTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
 
-    constructor(uint256 _chainId, address _eventListener, address _eventEmitter) ITokenBridge() public {
+    constructor(uint256 _chainId, EventListener _eventListener, EventEmitter _eventEmitter) ITokenBridge(_eventListener, _eventEmitter) public {
         chainId = _chainId;
 
-        eventListener = EventListener(_eventListener);
-        eventEmitter = EventEmitter(_eventEmitter);
+        // eventListener = EventListener(_eventListener);
+        // eventEmitter = EventEmitter(_eventEmitter);
     }
 
     function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
@@ -45,14 +45,13 @@ contract Escrow is Ownable, ITokenBridge {
     {
 
         // bytes32 eventHash = _getTokensBridgedEventHash(_receiver, _token, _amount, chainId, _salt);
-        bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, chainId, _salt);
+        bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, _chainId, _salt);
         
         _checkEventProcessed(eventHash);
 
         require(eventListener.checkEvent(
             _proof,
             _proofPaths,
-            _interchainStateRoot,
             _eventsProof,
             _eventsPaths,
             _eventsRoot,
