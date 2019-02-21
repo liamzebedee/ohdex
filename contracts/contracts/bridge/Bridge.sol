@@ -2,9 +2,10 @@ pragma solidity ^0.5.0;
 
 import "../events/EventListener.sol";
 import "../events/EventEmitter.sol";
-import "../BridgedToken.sol";
+import "./tokens/BridgedToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "./tokens/WrappedNativeToken.sol";
 import "../libs/LibEvent.sol";
 import "./ITokenBridge.sol";
 
@@ -26,6 +27,7 @@ contract Bridge is Ownable, ITokenBridge {
         chainId = _chainId;
         eventListener = EventListener(_eventListener);
         eventEmitter = EventEmitter(_eventEmitter);
+        new WrappedNativeToken();
     }
     
     function claim(
@@ -59,7 +61,7 @@ contract Bridge is Ownable, ITokenBridge {
         ), "EVENT_NOT_FOUND");
         
         // TODO Make this work with claiming native tokens and less hacky
-        // if token is a contract and is not a bridged token use transfer
+        // if token is a contract and is not a bridged token use transfer 
         if(isContract(_token) && networks[_chainId].tokenToBridgedToken[_token] == address(0)) {
             IERC20(_token).transfer(_receiver, _amount);
         } else {
@@ -84,11 +86,6 @@ contract Bridge is Ownable, ITokenBridge {
  
         _createBridgeTokenEvent(_targetBridge, _receiver, _token, _amount, _chainId, _salt);
     }
-
-    // TODO Fix bridging native tokens
-    function bridgeNative(bytes32 _targetBridge, address _receiver, uint256 _chainId, uint256 _salt) public payable {
-        _createBridgeTokenEvent(_targetBridge, _receiver, address(0), msg.value, _chainId, _salt);
-    }
     
     function initNetwork(address _bridgeContract, uint256 _chainId) public onlyOwner {
         require(networks[_chainId].bridgeContract == address(0), "CHAIN_ALREADY_INITIALISED");
@@ -111,7 +108,6 @@ contract Bridge is Ownable, ITokenBridge {
         networks[_chainId].bridgedTokenToToken[bridgedTokenAddress] = _token;
 
         return networks[_chainId].tokenToBridgedToken[_token];
-
     }
 
     function getBridgedTokenStatic(address _token, uint256 _chainId) public view returns(address) {

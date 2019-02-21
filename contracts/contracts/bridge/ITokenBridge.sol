@@ -55,6 +55,15 @@ contract ITokenBridge {
         bytes32 _eventsRoot
     ) public;
 
+    function bridge(
+        bytes32 _targetBridge,
+        address _token,
+        address _receiver,
+        uint256 _amount,
+        uint256 _chainId,
+        uint256 _salt
+    )public;
+
     function _checkEventProcessed(bytes32 eventHash) internal {
         require(!processedEvents[eventHash], "EVENT_ALREADY_PROCESSED");
         processedEvents[eventHash] = true;

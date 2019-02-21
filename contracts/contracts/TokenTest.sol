@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./BridgedToken.sol";
+import "./bridge/tokens/BridgedToken.sol";
 
 
 contract TokenTest {
