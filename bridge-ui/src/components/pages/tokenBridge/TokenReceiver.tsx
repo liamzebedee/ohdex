@@ -44,7 +44,7 @@ class TokenReceiver extends React.Component<any> {
         const salt = toBN(randomHex(32));
         this.salt = salt;
 
-        let ethersProvider = new ethers.providers.JsonRpcProvider(getConfigValue(chainB, "rpcUrl"));
+        let ethersProvider = new ethers.providers.JsonRpcProvider(getConfigValueByName(chainB, "rpcUrl"));
         ethersProvider.polling = true;
         ethersProvider.pollingInterval = 1000;
     
@@ -54,8 +54,8 @@ class TokenReceiver extends React.Component<any> {
             const Escrow = drizzle.contracts.Escrow;
             const approveTxId = drizzle.contracts[tokenAddress].methods.approve.cacheSend(Escrow.address, weiTokenAmount, {from});
             // address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt
-            console.log(getConfigValue(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt);
-            const bridgeTxId = Escrow.methods.bridge.cacheSend(getConfigValue(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            console.log(getConfigValueByName(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt);
+            const bridgeTxId = Escrow.methods.bridge.cacheSend(getConfigValueByName(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
 
             this.setState({
                 approveTxId,
@@ -71,7 +71,7 @@ class TokenReceiver extends React.Component<any> {
             const Bridge = drizzle.contracts.Bridge;
             // bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
             // function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
-            const bridgeTxId = Bridge.methods.bridge.cacheSend(getConfigValue(chainB, 'escrowAddress'), originTokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            const bridgeTxId = Bridge.methods.bridge.cacheSend(getConfigValueByName(chainB, 'escrowAddress'), originTokenAddress, from, weiTokenAmount, chainB, salt, {from});
 
             this.setState({
                 bridgeTxId,

@@ -1,6 +1,7 @@
 import React from 'react';
 import {FormControl, InputLabel, Select, MenuItem, withStyles, Typography, Button} from '@material-ui/core';
 import networks from "../../../../../config/networks";
+import {getChainName} from '../../../utils/getConfigValue';
 import {connect} from 'react-redux';
 import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
 import { node } from 'prop-types';
@@ -19,7 +20,7 @@ const styles = (theme:any) => ({
 class NetworkPicker extends React.Component<any> {
 
     state = {
-        currentChain: 0,
+        currentChain: "",
     }
 
     constructor(props:any){
@@ -28,13 +29,15 @@ class NetworkPicker extends React.Component<any> {
 
     componentDidMount() {
 
-        const currentChainId = this.props.drizzleState.web3.networkId;
+        const currentChain = getChainName(this.props.drizzleState.web3.networkId);
 
         this.firstRender();
 
         this.setState({
-            currentChain: currentChainId
+            currentChain: currentChain
         })
+
+        console.log(currentChain);
     }
 
 
@@ -60,7 +63,7 @@ class NetworkPicker extends React.Component<any> {
                     >   
                         {
                             chains.map((network) => {
-                                return <MenuItem key={network.chainId} value={network.chainId}>{network.name}</MenuItem>
+                                return <MenuItem key={network.name} value={network.name}>{network.name}</MenuItem>
                             })
                         }
                     </Select>
@@ -115,7 +118,7 @@ class NetworkPicker extends React.Component<any> {
         if(this.getChainSupported(currentChainId)) {
             await this.props.dispatch({
                 type: bridgeActionTypes.SET_CHAIN_A,
-                chainId: currentChainId
+                chainId: getChainName(currentChainId)
             })
             this.setCanContinue();
         }
