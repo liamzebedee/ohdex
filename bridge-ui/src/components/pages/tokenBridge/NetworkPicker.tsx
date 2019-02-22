@@ -95,7 +95,7 @@ class NetworkPicker extends React.Component<any> {
                     >   
                         {
                             chains.map((network) => {
-                                return <MenuItem key={network.chainId} value={network.chainId}>{network.name}</MenuItem>
+                                return <MenuItem key={network.name} value={network.name}>{network.name}</MenuItem>
                             })
                         }
                     </Select>
