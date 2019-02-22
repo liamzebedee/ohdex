@@ -24,15 +24,17 @@ contract WrappedNativeToken is Token {
 
     function bridge(bytes32 _targetBridge, address _receiver, uint256 _chainId, uint256 _salt) public payable {
         address spender = address(bridgeContract);
-        _mint(msg.sender, msg.value);
-        _approve(msg.sender, spender, msg.value);
+        _mint(address(this), msg.value); //mint token to this address
+        approve(address(bridgeContract), msg.value); // allow bridge contract to pull tokens
         bridgeContract.bridge(_targetBridge, address(this), _receiver, msg.value, _chainId, _salt);
     }
 
     function transfer(address _to, uint256 _amount) public returns (bool) {
         // If bridge calls transfer automaticly unwrap tokens
         if(msg.sender == address(bridgeContract)) {
-            withdrawTo(address(uint160(_to)), _amount); //This typecasting is weird
+            withdrawTo(address(uint160(_to)), _amount); //This typecasting is weird but needed to cast address to address payable
+        } else { //otherwise do a normal transfer
+            super.transfer(_to, amount);
         }
         return true;
     }

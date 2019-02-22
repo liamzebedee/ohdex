@@ -16,10 +16,6 @@ import {
 } from '../../contracts/build/wrappers/event_emitter';
 
 import {
-    EscrowContract
-}  from '../../contracts/build/wrappers/escrow'
-
-import {
     BridgeContract
 }   from '../../contracts/build/wrappers/bridge';
 

@@ -5,9 +5,6 @@ import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 import { prependListener } from "cluster";
 import {promises as fs} from "fs";
 
-// import {
-//     EscrowContract
-// }  from '../../contracts/build/wrappers/escrow'
 
 import {
     BridgeContract
@@ -54,7 +51,7 @@ async function init() {
     // }
     console.log("Initiating Bridge");
     try {
-        const txId = await bridge.initNetwork.sendTransactionAsync(configB.escrowAddress, configB.chainId, {from: account, gas:100000});
+        const txId = await bridge.initNetwork.sendTransactionAsync(configB.bridgeAddress, configB.chainId, {from: account, gas:100000});
         await web3.awaitTransactionMinedAsync(txId);
     } catch(e) {
         console.error(e);

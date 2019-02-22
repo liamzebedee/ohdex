@@ -21,7 +21,7 @@
     "test:EventListener": "mocha -r source-map-support/register -r make-promises-safe --bail --exit lib/contracts/test/EventListener.spec.js",
     "test:MerkleTree": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/MerkleTree.spec.ts",
     "test:Escrow": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/Escrow.spec.ts",
-    "abi-gen": "abi-gen --abis 'build/contracts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
+    "abi-gen": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "testchain:ganache": "ganache-cli -a 20 -p 9545 --gasLimit 10000000",
     "testchain:parity": "cd devchain && parity --config testnode.toml",
     "remix": "remixd -s . --remix-ide https://remix.ethereum.org",
