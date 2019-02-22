@@ -1,7 +1,7 @@
 import React from 'react';
 import { withStyles, LinearProgress, Typography } from '@material-ui/core';
 import { connect } from 'react-redux';
-import { toBN, toWei, fromWei, randomHex, BN, padLeft } from 'web3-utils';
+import { toBN, toWei, fromWei, randomHex, BN } from 'web3-utils';
 import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
 import {ethers} from 'ethers';
 import getConfigValue from '../../../utils/getConfigValue';
@@ -51,8 +51,8 @@ class TokenReceiver extends React.Component<any> {
             const Escrow = drizzle.contracts.Escrow;
             const approveTxId = drizzle.contracts[tokenAddress].methods.approve.cacheSend(Escrow.address, weiTokenAmount, {from});
             // address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt
-            console.log(padLeft(getConfigValue(chainB, 'bridgeAddress'), 64), tokenAddress, from, weiTokenAmount, chainB, salt);
-            const bridgeTxId = Escrow.methods.bridge.cacheSend(padLeft(getConfigValue(chainB, 'bridgeAddress'), 64), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            console.log(getConfigValue(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt);
+            const bridgeTxId = Escrow.methods.bridge.cacheSend(getConfigValue(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
 
             this.setState({
                 approveTxId,
@@ -68,7 +68,7 @@ class TokenReceiver extends React.Component<any> {
             const Bridge = drizzle.contracts.Bridge;
             // bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
             // function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
-            const bridgeTxId = Bridge.methods.bridge.cacheSend(padLeft(getConfigValue(chainB, 'escrowAddress'), 64), originTokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            const bridgeTxId = Bridge.methods.bridge.cacheSend(getConfigValue(chainB, 'escrowAddress'), originTokenAddress, from, weiTokenAmount, chainB, salt, {from});
 
             this.setState({
                 bridgeTxId,
