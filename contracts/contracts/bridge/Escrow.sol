@@ -20,7 +20,7 @@ contract Escrow is Ownable, ITokenBridge {
         // eventEmitter = EventEmitter(_eventEmitter);
     }
 
-    function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
+    function bridge(address _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {
         require(IERC20(_token).transferFrom(msg.sender, address(this), _amount), "TOKEN_TRANSFER_FAILED");
         _createBridgeTokenEvent(_targetBridge, _receiver, _token, _amount, _chainId, _salt);
     }
@@ -45,7 +45,7 @@ contract Escrow is Ownable, ITokenBridge {
     {
 
         // bytes32 eventHash = _getTokensBridgedEventHash(_receiver, _token, _amount, chainId, _salt);
-        bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, _chainId, _salt);
+        bytes32 eventHash = _getTokensBridgedEventHash(address(this), _receiver, _token, _amount, _chainId, _salt);
         
         _checkEventProcessed(eventHash);
 

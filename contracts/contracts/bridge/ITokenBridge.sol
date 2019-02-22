@@ -5,7 +5,7 @@ import "../events/EventListener.sol";
 
 contract ITokenBridge {
     uint256 chainId;
-    bytes32 public tokenBridgeId;
+    // bytes32 public tokenBridgeId;
     EventListener public eventListener;
     EventEmitter public eventEmitter;
 
@@ -13,19 +13,21 @@ contract ITokenBridge {
 
     event TokensBridged(
         bytes32 eventHash, 
-        bytes32 targetBridge, 
+        address targetBridge, 
         uint256 indexed chainId, address indexed receiver, address indexed token, uint256 amount, uint256 _salt
     );
 
     constructor(EventListener _eventListener, EventEmitter _eventEmitter) public {
-        tokenBridgeId = keccak256(abi.encodePacked(this, blockhash(1)));
+        // tokenBridgeId = keccak256(abi.encodePacked(this, blockhash(1)));
+        // tokenBridgeId = abi.encodePacked(bytes12(0x000000000000000000000000), address(this));
+        // tokenBridgeId = bytes32(uint256(address(this)) << 96);
 
         eventListener = _eventListener;
         eventEmitter = _eventEmitter;
     }
     
     function _createBridgeTokenEvent(
-        bytes32 _targetBridge, address _receiver, address _token, uint256 _amount, uint256 _chainId, uint256 _salt
+        address _targetBridge, address _receiver, address _token, uint256 _amount, uint256 _chainId, uint256 _salt
     ) public {
         bytes32 eventHash = _getTokensBridgedEventHash(
             _targetBridge, _receiver, _token, _amount, _chainId, _salt
@@ -35,7 +37,7 @@ contract ITokenBridge {
     }
 
     function _getTokensBridgedEventHash(
-        bytes32 _targetBridge, address _receiver, address _token, uint256 _amount, uint256 _chainId, uint256 _salt
+        address _targetBridge, address _receiver, address _token, uint256 _amount, uint256 _chainId, uint256 _salt
     ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(
             _targetBridge, _receiver, _token, _amount, _chainId, _salt

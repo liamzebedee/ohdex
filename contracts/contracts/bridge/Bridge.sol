@@ -40,7 +40,7 @@ contract Bridge is Ownable, ITokenBridge {
         bytes32 _eventHash
         ) public 
     {
-        bytes32 eventHash = _getTokensBridgedEventHash(tokenBridgeId, _receiver, _token, _amount, _chainId, _salt);
+        bytes32 eventHash = _getTokensBridgedEventHash(address(this), _receiver, _token, _amount, _chainId, _salt);
         
         require(eventHash == _eventHash, "EVENT_NOT_SAME");
         _checkEventProcessed(eventHash);
@@ -66,7 +66,7 @@ contract Bridge is Ownable, ITokenBridge {
         emit BridgedTokensClaimed(_token, _receiver, _amount, _chainId, _salt);
     }
 
-    function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {                
+    function bridge(address _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {                
         BridgedToken bridgedToken = BridgedToken(getBridgedToken(_token, _chainId));
         bridgedToken.burn(msg.sender, _amount);
 
