@@ -1,4 +1,4 @@
-import { EthereumChainTracker, StateLeaf } from "./chain/ethereum";
+import { EthereumChainTracker } from "./chain/ethereum";
 import { ChainTracker, EventEmittedEvent, MessageSentEvent } from "./chain/tracker";
 
 const winston = require('winston');
@@ -11,7 +11,9 @@ import { MerkleTree, MerkleTreeProof } from "../../ts-merkle-tree/src";
 import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
 import { EventEmitter } from "./declarations";
 import { dehexify } from "./utils";
-import { InterchainState } from "./interchain";
+import { CrosschainState, EthereumStateLeaf } from "./interchain";
+import { EventListenerContract } from "../../contracts/build/wrappers/event_listener";
+
 
 interface ChainConfig {
     chainType: 'ethereum';
@@ -39,6 +41,8 @@ interface CrosschainEvents {
 export class Relayer {
     chains: { [k: string]: EthereumChainTracker };
 
+    state: CrosschainState;
+
     crosschainEvents: EventEmitter<CrosschainEvents>;
 
     logger;
@@ -61,6 +65,7 @@ export class Relayer {
         });
 
         this.crosschainEvents = new eventEmitter();
+        this.state = new CrosschainState();
     }
 
     async start() {
@@ -92,11 +97,11 @@ export class Relayer {
                 await this.updateStateRoots()
             })
 
-            chain.events.on('ITokenBridge.TokensBridgedEvent', (msg: MessageSentEvent) => {
+            chain.events.on('ITokenBridge.TokensBridgedEvent', async (msg: MessageSentEvent) => {
                 let found: boolean = false;
 
                 for(let chain2 of Object.values(this.chains)) {
-                    if(chain2.receiveCrosschainMessage(msg)) return;
+                    if(await chain2.receiveCrosschainMessage(msg)) return;
                 }
 
                 if(!found) {
@@ -108,39 +113,35 @@ export class Relayer {
         });
 
 
-        await this.updateStateRoots()
+        // await this.updateStateRoots()
 
     }
 
     async updateStateRoots() {
-        let interchainState = new InterchainState()
-        
-        Object.values(this.chains).map(chain => {
-            interchainState.addChain(chain.id, chain.getStateLeaf())
-        });
-        interchainState.computeState()
+        this.state = new CrosschainState
 
-        this.logger.info(`Computed new interchain state root: ${hexify(interchainState.globalState.root())}`)
+        Object.values(this.chains).map(chain => {
+            this.state.put(chain.state)
+        });
+
+        this.state.compute()
+
+        this.logger.info(`Computed new interchain state root: ${this.state.root}`)
         
-        let chainsToUpdate = Object.values(this.chains)//.filter(({ id }) => id !== chainId)
+        let chainsToUpdate = Object.values(this.chains)
         
         await Promise.all(
             chainsToUpdate.map(async chain => {
-                let proof = interchainState.proofs[chain.id];
-                let root = interchainState.roots[chain.id]
-                
                 try {
-                    console.log(chain.id, 0)
+                    let { proof, leaf } = this.state.proveUpdate(chain.state.getId())
                     await chain.updateStateRoot(
                         proof,
-                        root
+                        leaf
                     );
-
-                    console.log(chain.id, 1)
 
                     chain.events.once('StateRootUpdated', async () => {
                         await chain.processBridgeEvents(
-                            interchainState
+                            this.state
                         )
                     })
                     
@@ -155,4 +156,6 @@ export class Relayer {
         await Promise.all(Object.values(this.chains).map(chain => chain.stop));
     }
 }
+
+
 

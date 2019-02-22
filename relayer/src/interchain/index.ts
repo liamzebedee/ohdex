@@ -1,100 +1,217 @@
-import { StateLeaf } from "../chain/ethereum";
-import { MerkleTree, MerkleTreeProof } from "../../../ts-merkle-tree/src";
-
-// @ts-ignore
-import { keccak256 } from 'ethereumjs-util';
+import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
+import { MerkleTree } from "@ohdex/typescript-solidity-merkle-tree/src";
 import { dehexify, hexify } from "../utils";
+import { BigNumber } from "0x.js";
 
-class InterchainState {
-    leaves: Buffer[] = [];
+
+const toBN = (str) => new BigNumber(str);
+// import { keccak256 } from 'web3-utils';
+const keccak256 = (x: any) => dehexify(require('web3-utils').keccak256(x));
+
+// Holds state (events) in a merkle tree and creates proofs of events
+abstract class StateGadget {
+    abstract getId(): string;
+    abstract getLeaf(): AbstractChainStateLeaf;
+    abstract proveEvent(eventId: string): MerkleTreeProof;
+}
+
+// A buffer'ised representation of a state, for composition in larger state trees
+abstract class AbstractChainStateLeaf {
+    abstract toBuffer(): Buffer;
+}
+
+class EthereumStateLeaf extends AbstractChainStateLeaf {
+    lastRoot: Buffer;
+    eventsRoot: Buffer;
     
-    roots: { 
-        [k: string]: StateLeaf
-    } = {};
+    toBuffer(): Buffer {
+        return Buffer.concat([
+            // this.lastRoot,
+            this.eventsRoot
+        ])
+    }
+}
 
-    globalState: MerkleTree;
+class MockStateLeaf extends AbstractChainStateLeaf {
+    data: string;
 
-    proofs: {
-        [k: string]: MerkleTreeProof
-    } = {}
+    toBuffer(): Buffer {
+        return Buffer.from(this.data);
+    }
+} 
 
-    constructor() {}
+class MockChainStateGadget extends StateGadget {
+    state = ""
 
-    computeState() {
-        this.globalState = new MerkleTree(
-            this.leaves,
+    id = `${Math.random()}`
+
+
+    getId() {
+        return this.id
+    }
+
+    setState(s) {
+        this.state = s;
+    }
+
+    getLeaf(): MockStateLeaf {
+        let leaf = new MockStateLeaf()
+        leaf.data = this.state
+        return leaf
+    }
+
+    proveEvent(eventId: string): MerkleTreeProof {
+        throw new Error('unimplemented')
+    }
+}
+
+class EthereumChainStateGadget extends StateGadget {
+    events: Buffer[] = [];
+    eventsTree: MerkleTree;
+    id: string;
+
+    constructor(id: string) {
+        super()
+        this.id = id;
+    }
+
+    get root() {
+        if(this.events.length == 0) {
+            return Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex');
+        }
+        return this.eventsTree.root();
+    }
+
+    getId() {
+        return this.id
+    }
+
+    // putChainState(chainId: string, oldRoot: string, )
+    addEvent(eventHash: string) {
+        this.events.push(dehexify(eventHash))
+        this.eventsTree = new MerkleTree(
+            this.events,
             keccak256
         );
-        let chains = Object.keys(this.roots)
-
-        for(let id of chains) {
-            let leafIdx = this.getChainLeafIdx(id);
-            let proof = this.globalState.generateProof(leafIdx)
-            if(!this.globalState.verifyProof(proof, proof.leaf)) throw new Error;
-
-            this.proofs[id] = proof;
-        }
     }
 
-    addChain(chainId: string, leaf: StateLeaf) {
-        this.roots[chainId] = leaf;
-        this.leaves = Object.values(this.roots).map<Buffer>(root => {
-            return root._leaf
-        });
-    }
-
-    getChainLeafIdx(chainId: string) {
-        let leafIdx = Object.keys(this.roots).indexOf(chainId)
-        return leafIdx
-    }
-
-    getEventProof(chainId: string, evHash: string) {
-        let root = this.roots[chainId]
-        
-        let _interchainStateRoot = hexify(root.interchainStateRoot);
-        let _eventsRoot = hexify(root.eventsRoot);
-
-        let proof = this.proofs[chainId]
-        let _proofs = proof.proofs.map(hexify)
-        let _paths = proof.paths;
-
-
-        let eventsTree = root.eventsTree;
-        let eventsProof = eventsTree.generateProof(eventsTree.findLeafIndex(dehexify(evHash)))
-        if(!eventsTree.verifyProof(eventsProof, eventsProof.leaf)) throw new Error;
-
-        let _eventsProof = eventsProof.proofs.map(hexify);
-        let _eventsPaths = eventsProof.paths;
-        let _eventHash = evHash;
-
-
-        // bytes32[] memory proof, 
-        // bool[] memory paths, 
-        // bytes32 _interchainStateRoot, 
-        
-        // bytes32[] memory _eventsProof,
-        // bool[] memory _eventsPaths,
-        // bytes32 _eventsRoot,
-        // bytes32 _eventHash
-        return {
-            _proofs,
-            _paths,
-            _interchainStateRoot,
-            _eventsProof,
-            _eventsPaths,
-            _eventsRoot,
-            _eventHash
-        }
-
-    }
-
-    isEventAcknowledged(chainId: string, eventHash: string):boolean {
-        let eventsTree = this.roots[chainId].eventsTree
-        return eventsTree.findLeafIndex(dehexify(eventHash)) != -1;
-    }
+    // updateCurrentRoot(root: string) {
+    //     this.root = dehexify(root)
+    // }
     
+    getLeaf(): EthereumStateLeaf {
+        let leaf = new EthereumStateLeaf()
+        if(this.events.length == 0) {
+            leaf.eventsRoot = Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex');
+        } else {
+            leaf.eventsRoot = this.eventsTree.root()
+        }
+        return leaf
+    }
+
+    proveEvent(eventHash: string): MerkleTreeProof {
+        let idx = this.eventsTree.findLeafIndex(dehexify(eventHash))
+        if(idx === -1) throw new Error(`no event ${eventHash}`)
+        return this.eventsTree.generateProof(idx)
+    }
+}
+
+
+class CrosschainState {
+    chains: {
+        [id: string]: StateGadget
+    } = {};
+    tree: MerkleTree;
+    leaves: AbstractChainStateLeaf[] = [];
+    leafIdx: {
+        [id: string]: number
+    } = {};
+
+    // @ts-ignore
+    get root(): string {
+        return hexify(this.tree.root())
+    }
+
+    put(state: StateGadget) {
+        this.chains[state.getId()] = state
+    }
+
+    compute() {
+        let chains = Object.keys(this.chains)
+        let leafIdx: {
+            [id: string]: number
+        } = {};
+        let leaves: AbstractChainStateLeaf[] = []
+
+        let i = 0;
+        for(let id of chains) {
+            let leaf = this.chains[id].getLeaf()
+            leaves.push(leaf)
+            leafIdx[id] = i;
+            i++
+        }
+
+        let tree = new MerkleTree(
+            leaves.map(leaf => leaf.toBuffer()),
+            keccak256
+        )
+
+        this.tree = tree;
+        this.leaves = leaves;
+        this.leafIdx = leafIdx;
+    }
+
+    proveUpdate(chainId: string): CrosschainStateUpdateProof {
+        if(!this.chains[chainId]) throw new Error(`no chain for id ${chainId}`)
+        let leafIdx = this.leafIdx[chainId]
+        let leaf = this.leaves[leafIdx]
+        let proof = this.tree.generateProof(leafIdx)
+        
+        return {
+            chainId,
+            proof,
+            leaf
+        }
+    }
+
+    proveEvent(fromChain: string, eventId: string): CrosschainEventProof {
+        if(!this.chains[fromChain]) throw new Error(`no chain for id ${fromChain}`)
+
+        // Other chains can be on previous roots
+        // So we need to keep track
+
+        let gadget = this.chains[fromChain]
+        let eventProof = gadget.proveEvent(eventId)
+
+        let rootProof = this.tree.generateProof(
+            this.leafIdx[fromChain]
+        );
+
+        return {
+            eventProof,
+            rootProof
+        }
+    }
+}
+
+class CrosschainStateUpdateProof {
+    chainId: string;
+    proof: MerkleTreeProof;
+    leaf: AbstractChainStateLeaf;
+}
+
+class CrosschainEventProof {
+    eventProof: MerkleTreeProof;
+    rootProof: MerkleTreeProof;
 }
 
 export {
-    InterchainState
+    CrosschainState,
+    EthereumChainStateGadget,
+    EthereumStateLeaf,
+    
+    AbstractChainStateLeaf,
+
+    CrosschainStateUpdateProof,
+    CrosschainEventProof
 }

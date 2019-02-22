@@ -12,11 +12,10 @@ interface EventEmittedEvent extends Event {
 
 type chainId = string
 interface MessageSentEvent extends Event {
-    // from: chainId;
-    toBridge: chainId;
+    fromChain: chainId;
+    toBridge: string;
     data: ITokenBridgeEventArgs;
     eventHash: string;
-    fromChain: chainId
 }
 
 interface ChainEvents {
