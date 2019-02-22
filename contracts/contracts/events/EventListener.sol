@@ -100,7 +100,7 @@ contract EventListener is MerkleTreeVerifier {
 
         // It must reference the previous interchain state root and prove we build upon it.
         // require(_interchainStateRoot == interchainStateRoot, "INVALID_STATE_CHRONOLOGY");
-        require(_newInterchainStateRoot != interchainStateRoot, "HUH");
+        // require(_newInterchainStateRoot != interchainStateRoot, "HUH");
 
         // TODO - Verify this chain's events are acknowledged        
         // bytes32 eventsRoot = MerkleProof.computeRoot(EventEmitter.getPendingEvents());
