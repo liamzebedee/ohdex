@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { toBN, toWei, fromWei, randomHex, BN } from 'web3-utils';
 import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
 import {ethers} from 'ethers';
-import getConfigValue from '../../../utils/getConfigValue';
+import getConfigValue, {getConfigValueByName} from '../../../utils/getConfigValue';
 
 
 import EscrowArtifact from '@ohdex/contracts/build/artifacts/Escrow.json'
@@ -63,7 +63,7 @@ class TokenReceiver extends React.Component<any> {
             })
 
             // event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
-            const bridge = new ethers.Contract(getConfigValue(chainB, "bridgeAddress"), BridgeArtifact.compilerOutput.abi, this.chainBProvider);
+            const bridge = new ethers.Contract(getConfigValueByName(chainB, "bridgeAddress"), BridgeArtifact.compilerOutput.abi, this.chainBProvider);
             const filter = bridge.filters.BridgedTokensClaimed(tokenAddress, from, null, chainA, null);
             bridge.on(filter, this.tokensClaimed);
         } else {
@@ -78,7 +78,7 @@ class TokenReceiver extends React.Component<any> {
             })
 
             // event OriginTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
-            const escrow = new ethers.Contract(getConfigValue(chainB, "escrowAddress"), EscrowArtifact.compilerOutput.abi, this.chainBProvider);
+            const escrow = new ethers.Contract(getConfigValueByName(chainB, "escrowAddress"), EscrowArtifact.compilerOutput.abi, this.chainBProvider);
             const filter = escrow.filters.OriginTokensClaimed(originTokenAddress, from, null, chainA, null);
             escrow.on(filter, this.tokensClaimed);
         }
