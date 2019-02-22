@@ -12,6 +12,7 @@
     }
   },
   "scripts": {
+    "watch": "tsc -b tsconfig.json",
     "watch-sol": "npm-watch compile-sol",
     "compile": "sol-compiler contracts/",
     "compile-sol": "truffle compile --all",

@@ -17,13 +17,15 @@
         "module": "commonjs",
         "inlineSourceMap": true,
         "declaration": true,
-        "composite": true
+        "composite": true,
+        "resolveJsonModule": true
     },
     "references": [
       { "path": "../ts-merkle-tree" }
     ],
     "include": [
-        "./build/wrappers/*"
+        "./build/wrappers/*",
+        "./build/artifacts/*.json",
     ],
     "exclude": [
         "node_modules/**"
