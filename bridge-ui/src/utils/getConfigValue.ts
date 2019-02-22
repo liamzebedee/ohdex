@@ -26,6 +26,8 @@ export default (networkId:Number, configValue:string) => {
 }
 
 function getConfigValueByName(name:string, configValue:string) {
+    let conf = networks[name]
+    if(!conf) throw new Error(`no config for ${name}`)
     return networks[name][configValue];
 }
 

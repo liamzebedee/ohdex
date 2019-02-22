@@ -37,6 +37,8 @@ class TokenReceiver extends React.Component<any> {
         const {tokenAddress, tokenAmount, chainB, chainA, bridgingBack, originTokenAddress} = this.props.bridge;
         const {drizzle, drizzleState} = this.props;
 
+        const chainAID = getConfigValueByName(chainA, "chainId");
+        const chainBID = getConfigValueByName(chainB, "chainId");
         
         const weiTokenAmount = toWei(tokenAmount);
         const from = drizzleState.accounts[0];
@@ -54,8 +56,12 @@ class TokenReceiver extends React.Component<any> {
             const Escrow = drizzle.contracts.Escrow;
             const approveTxId = drizzle.contracts[tokenAddress].methods.approve.cacheSend(Escrow.address, weiTokenAmount, {from});
             // address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt
-            console.log(getConfigValueByName(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt);
-            const bridgeTxId = Escrow.methods.bridge.cacheSend(getConfigValueByName(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            console.log(getConfigValueByName(chainB, 'bridgeAddress'), tokenAddress, from, weiTokenAmount, chainBID, salt);
+            
+            const bridgeTxId = Escrow.methods.bridge.cacheSend(
+                getConfigValueByName(chainB, 'bridgeAddress'), 
+                tokenAddress, from, weiTokenAmount, chainBID, salt, {from}
+            );
 
             this.setState({
                 approveTxId,
@@ -63,23 +69,29 @@ class TokenReceiver extends React.Component<any> {
             })
 
             // event BridgedTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
-            const bridge = new ethers.Contract(getConfigValueByName(chainB, "bridgeAddress"), BridgeArtifact.compilerOutput.abi, this.chainBProvider);
-            const filter = bridge.filters.BridgedTokensClaimed(tokenAddress, from, null, chainA, null);
+            const bridge = new ethers.Contract(
+                getConfigValueByName(chainB, "bridgeAddress"), BridgeArtifact.compilerOutput.abi, this.chainBProvider
+            );
+            const filter = bridge.filters.BridgedTokensClaimed(tokenAddress, from, null, chainAID, null);
             bridge.on(filter, this.tokensClaimed);
         } else {
             // TODO Test this code
             const Bridge = drizzle.contracts.Bridge;
             // bridge(address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
             // function bridge(bytes32 _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt)
-            const bridgeTxId = Bridge.methods.bridge.cacheSend(getConfigValueByName(chainB, 'escrowAddress'), originTokenAddress, from, weiTokenAmount, chainB, salt, {from});
+            const bridgeTxId = Bridge.methods.bridge.cacheSend(
+                getConfigValueByName(chainB, 'escrowAddress'), originTokenAddress, from, weiTokenAmount, chainBID, salt, {from}
+            );
 
             this.setState({
                 bridgeTxId,
             })
 
             // event OriginTokensClaimed(address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt );
-            const escrow = new ethers.Contract(getConfigValueByName(chainB, "escrowAddress"), EscrowArtifact.compilerOutput.abi, this.chainBProvider);
-            const filter = escrow.filters.OriginTokensClaimed(originTokenAddress, from, null, chainA, null);
+            const escrow = new ethers.Contract(
+                getConfigValueByName(chainB, "escrowAddress"), EscrowArtifact.compilerOutput.abi, this.chainBProvider
+            );
+            const filter = escrow.filters.OriginTokensClaimed(originTokenAddress, from, null, chainAID, null);
             escrow.on(filter, this.tokensClaimed);
         }
     }
