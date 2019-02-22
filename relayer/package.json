@@ -3,7 +3,8 @@
     "scripts": {
         "start": "ts-node src/index.ts",
         "test:watch": "",
-        "test": "mocha -r source-map-support -r ts-node/register -r make-promises-safe --bail --exit test/index.spec.ts"
+        "test": "mocha -r source-map-support -r ts-node/register -r make-promises-safe --bail --exit test/index.spec.ts",
+        "test:specific": "mocha -r source-map-support -r ts-node/register -r make-promises-safe --bail --exit"
     },
     "dependencies": {
         "0x.js": "^3.0.3",

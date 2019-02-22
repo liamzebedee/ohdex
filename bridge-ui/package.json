@@ -5,7 +5,7 @@
   "author": "0dex",
   "license": "MIT",
   "scripts": {
-    "dev": "next",
+    "dev": "NODE_ENV=development next",
     "build": "next build",
     "start": "next start",
     "kill": "kill $(lsof -t -i :3000)",
@@ -16,6 +16,7 @@
     "@types/next": "^7.0.8",
     "@types/react": "^16.8.1",
     "@types/react-redux": "^7.0.1",
+    "@zeit/next-source-maps": "^0.0.3",
     "@zeit/next-typescript": "^1.1.1",
     "drizzle": "^1.3.3",
     "drizzle-react": "^1.2.0",

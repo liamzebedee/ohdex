@@ -276,6 +276,7 @@ export class EthereumChainTracker extends ChainTracker {
 
             await getPreviousBridgeEvents(this.bridgeContract_sub)
             await getPreviousBridgeEvents(this.escrowContract_sub)
+            // TODO
 
             // let eventEmittedEvent: EventEmittedEvent = {
             //     eventHash: '',
@@ -357,6 +358,7 @@ export class EthereumChainTracker extends ChainTracker {
                         )
                     );
                     this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
+                    this.pendingTokenBridgingEvs.pop()
                 }
                 else if(ev.toBridge == shortToLongBridgeId(this.bridgeContract.address)) {
                 // else if(ev.toBridge == await this.bridgeContract.tokenBridgeId.callAsync()) {
@@ -378,6 +380,7 @@ export class EthereumChainTracker extends ChainTracker {
                         )
                     );
                     this.logger.info(`bridged ev: ${ev.eventHash} for bridge ${ev.toBridge}`)
+                    this.pendingTokenBridgingEvs.pop()
                 } else {
                     this.logger.error(`couldn't find bridge ${ev.toBridge} for event ${ev.eventHash}`)
                 }
@@ -417,7 +420,7 @@ export class EthereumChainTracker extends ChainTracker {
         let tokensBridgedEv: MessageSentEvent = {
             data,
             fromChain: this.state.getId(),
-            toBridge: data.targetBridge,
+            toBridge: shortToLongBridgeId(data.targetBridge),
             eventHash
         };
         this.events.emit('ITokenBridge.TokensBridgedEvent', tokensBridgedEv);

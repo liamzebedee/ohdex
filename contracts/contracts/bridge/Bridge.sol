@@ -63,7 +63,7 @@ contract Bridge is Ownable, ITokenBridge {
 
         // mint the tokens
         bridgedToken.mint(_receiver, _amount);
-        emit BridgedTokensClaimed(_token, _receiver, _amount, _chainId, _salt);
+        emit BridgedTokensClaimed(address(bridgedToken), _receiver, _amount, _chainId, _salt);
     }
 
     function bridge(address _targetBridge, address _token, address _receiver, uint256 _amount, uint256 _chainId, uint256 _salt) public {                

@@ -10,7 +10,7 @@ function dehexify(str: string): Buffer {
 
 function shortToLongBridgeId(addr: string): string {
     // return `0x000000000000000000000000`+addr.split('0x')[1]
-    return addr
+    return addr.toLowerCase()
 }
 
 export {

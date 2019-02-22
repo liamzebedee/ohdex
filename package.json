@@ -1,12 +1,16 @@
 {
-    "private": true,
+  "private": true,
+
   "workspaces": {
     "packages": [
       "contracts",
-      "ts-merkle-tree"
+      "ts-merkle-tree",
+      "bridge-ui",
+      "relayer"
     ],
     "nohoist": [
-      "**/ganache-cli/**"
+      "**/ganache-cli/**",
+      "**/openzeppelin-solidity/**"
     ]
   }
 }
