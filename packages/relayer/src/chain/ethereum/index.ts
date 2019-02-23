@@ -20,7 +20,8 @@ import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-t
 import { keccak256 } from 'ethereumjs-util';
 import { EtherscanProvider } from "ethers/providers";
 import { BaseContract } from "@0x/base-contract";
-import { EthereumChainStateGadget, CrosschainState, EthereumStateLeaf, AbstractChainStateLeaf } from "../../interchain";
+import { CrosschainState, ChainStateLeaf } from "../../interchain";
+import { EthereumStateGadget, EthereumStateLeaf } from "./state";
 
 
 const AbiCoder = require('web3-eth-abi').AbiCoder();
@@ -60,7 +61,7 @@ export class EthereumChainTracker extends ChainTracker {
     account: string;
 
 
-    state: EthereumChainStateGadget;
+    state: EthereumStateGadget;
 
     constructor(conf: any) {
         super(`Ethereum (chainId=${conf.chainId})`);
@@ -144,7 +145,7 @@ export class EthereumChainTracker extends ChainTracker {
             this.ethersProvider
         )
 
-        this.state = new EthereumChainStateGadget(this.eventListener.address)
+        this.state = new EthereumStateGadget(this.eventListener.address)
 
         this.eventEmitter_sub = new ethers.Contract(
             this.conf.eventEmitterAddress,
@@ -453,7 +454,7 @@ export class EthereumChainTracker extends ChainTracker {
     
 
     async updateStateRoot(
-        proof: MerkleTreeProof, leaf: AbstractChainStateLeaf
+        proof: MerkleTreeProof, leaf: ChainStateLeaf
     ): Promise<any> 
     {
         try {

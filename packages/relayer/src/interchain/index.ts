@@ -1,120 +1,8 @@
 import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 import { MerkleTree } from "@ohdex/typescript-solidity-merkle-tree/src";
-import { dehexify, hexify } from "../utils";
-import { BigNumber } from "0x.js";
+import { StateGadget, ChainStateLeaf } from "./gadget";
+import { keccak256, hexify } from "../utils";
 
-
-const toBN = (str) => new BigNumber(str);
-// import { keccak256 } from 'web3-utils';
-const keccak256 = (x: any) => dehexify(require('web3-utils').keccak256(x));
-
-// Holds state (events) in a merkle tree and creates proofs of events
-abstract class StateGadget {
-    abstract getId(): string;
-    abstract getLeaf(): AbstractChainStateLeaf;
-    abstract proveEvent(eventId: string): MerkleTreeProof;
-}
-
-// A buffer'ised representation of a state, for composition in larger state trees
-abstract class AbstractChainStateLeaf {
-    abstract toBuffer(): Buffer;
-}
-
-class EthereumStateLeaf extends AbstractChainStateLeaf {
-    lastRoot: Buffer;
-    eventsRoot: Buffer;
-    
-    toBuffer(): Buffer {
-        return Buffer.concat([
-            // this.lastRoot,
-            this.eventsRoot
-        ])
-    }
-}
-
-class MockStateLeaf extends AbstractChainStateLeaf {
-    data: string;
-
-    toBuffer(): Buffer {
-        return Buffer.from(this.data);
-    }
-} 
-
-class MockChainStateGadget extends StateGadget {
-    state = ""
-
-    id = `${Math.random()}`
-
-
-    getId() {
-        return this.id
-    }
-
-    setState(s) {
-        this.state = s;
-    }
-
-    getLeaf(): MockStateLeaf {
-        let leaf = new MockStateLeaf()
-        leaf.data = this.state
-        return leaf
-    }
-
-    proveEvent(eventId: string): MerkleTreeProof {
-        throw new Error('unimplemented')
-    }
-}
-
-class EthereumChainStateGadget extends StateGadget {
-    events: Buffer[] = [];
-    eventsTree: MerkleTree;
-    id: string;
-
-    constructor(id: string) {
-        super()
-        this.id = id;
-    }
-
-    get root() {
-        if(this.events.length == 0) {
-            return Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex');
-        }
-        return this.eventsTree.root();
-    }
-
-    getId() {
-        return this.id
-    }
-
-    // putChainState(chainId: string, oldRoot: string, )
-    addEvent(eventHash: string) {
-        this.events.push(dehexify(eventHash))
-        this.eventsTree = new MerkleTree(
-            this.events,
-            keccak256
-        );
-    }
-
-    // updateCurrentRoot(root: string) {
-    //     this.root = dehexify(root)
-    // }
-    
-    getLeaf(): EthereumStateLeaf {
-        let leaf = new EthereumStateLeaf()
-        if(this.events.length == 0) {
-            leaf.eventsRoot = Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex');
-        } else {
-            leaf.eventsRoot = this.eventsTree.root()
-        }
-        return leaf
-    }
-
-    proveEvent(eventHash: string): MerkleTreeProof {
-        let idx = this.eventsTree.findLeafIndex(dehexify(eventHash))
-        if(idx === -1) throw new Error(`no event ${eventHash}`)
-        return this.eventsTree.generateProof(idx)
-    }
-}
 
 
 class CrosschainState {
@@ -122,7 +10,7 @@ class CrosschainState {
         [id: string]: StateGadget
     } = {};
     tree: MerkleTree;
-    leaves: AbstractChainStateLeaf[] = [];
+    leaves: ChainStateLeaf[] = [];
     leafIdx: {
         [id: string]: number
     } = {};
@@ -141,7 +29,7 @@ class CrosschainState {
         let leafIdx: {
             [id: string]: number
         } = {};
-        let leaves: AbstractChainStateLeaf[] = []
+        let leaves: ChainStateLeaf[] = []
 
         let i = 0;
         for(let id of chains) {
@@ -197,7 +85,7 @@ class CrosschainState {
 class CrosschainStateUpdateProof {
     chainId: string;
     proof: MerkleTreeProof;
-    leaf: AbstractChainStateLeaf;
+    leaf: ChainStateLeaf;
 }
 
 class CrosschainEventProof {
@@ -206,12 +94,9 @@ class CrosschainEventProof {
 }
 
 export {
-    CrosschainState,
-    EthereumChainStateGadget,
-    EthereumStateLeaf,
-    
-    AbstractChainStateLeaf,
+    ChainStateLeaf,
 
+    CrosschainState,
     CrosschainStateUpdateProof,
     CrosschainEventProof
 }

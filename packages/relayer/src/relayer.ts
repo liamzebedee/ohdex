@@ -5,13 +5,13 @@ const winston = require('winston');
 const { format } = winston;
 const { combine, label, json, simple } = format;
 
-// import { MerkleTree } from 'typescript-solidity-merkle-tree';
-import { MerkleTree, MerkleTreeProof } from "../../ts-merkle-tree/src";
+
+import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
 import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
 import { EventEmitter } from "./declarations";
 import { dehexify } from "./utils";
-import { CrosschainState, EthereumStateLeaf } from "./interchain";
+import { CrosschainState } from "./interchain";
 import { EventListenerContract } from "../../contracts/build/wrappers/event_listener";
 
 
