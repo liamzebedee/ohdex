@@ -1,12 +1,17 @@
 
+
+import networks_prod from '../../../config/networks.json';
+import networks_test from '../../../config/test_networks.json';
+
+// let networks: typeof networks_prod;
 let networks: any;
 
 switch(process.env.NODE_ENV) {
     case 'development':
-        networks = require('../../../config/test_networks')
+        networks = networks_test;
         break;
     default:
-        networks = require('../../../config/networks')
+        networks = networks_prod;
         break;
 }
 
