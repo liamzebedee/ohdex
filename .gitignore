@@ -2,7 +2,7 @@
 packages/contracts/.DS_Store
 packages/contracts/devchain/keys
 *node_modules
-*yarn-error.log
+**/yarn-error.log
 
 packages/bridge-ui/.next
 packages/deployer/yarn-error.log
