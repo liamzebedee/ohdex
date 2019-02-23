@@ -1,5 +1,5 @@
 {
-  "name": "bridge-ui",
+  "name": "@ohdex/bridge-ui",
   "version": "0.1.0",
   "main": "index.js",
   "author": "0dex",

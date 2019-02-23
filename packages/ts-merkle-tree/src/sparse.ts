@@ -13,6 +13,7 @@ class SparseMerkleTree {
         this.items = items;
     }
 
+    
 }
 
 export {
