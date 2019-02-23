@@ -1,13 +1,13 @@
 
-contracts/.DS_Store
-contracts/devchain/keys
+packages/contracts/.DS_Store
+packages/contracts/devchain/keys
 *node_modules
 *yarn-error.log
 
-bridge-ui/.next
-deployer/yarn-error.log
+packages/bridge-ui/.next
+packages/deployer/yarn-error.log
 **/yarn.lock
-contracts/.0x-artifacts
-multichain/db
+packages/contracts/.0x-artifacts
+packages/multichain/db
 yarn-error.log
 yarn.lock
