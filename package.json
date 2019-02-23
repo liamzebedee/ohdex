@@ -1,12 +1,8 @@
 {
   "private": true,
-
   "workspaces": {
     "packages": [
-      "contracts",
-      "ts-merkle-tree",
-      "bridge-ui",
-      "relayer"
+      "packages/**"
     ],
     "nohoist": [
       "**/ganache-cli/**",
