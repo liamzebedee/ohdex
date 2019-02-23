@@ -8,8 +8,7 @@
     "dev": "NODE_ENV=development next",
     "build": "next build",
     "start": "next start",
-    "kill": "kill $(lsof -t -i :3000)",
-    "copy-artifacts": "cp ../contracts/build/artifacts/*.json src/abis/"
+    "kill": "kill $(lsof -t -i :3000)"
   },
   "dependencies": {
     "@material-ui/core": "^3.9.2",

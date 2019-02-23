@@ -6,17 +6,18 @@
   "watch": {
     "contracts": {
       "patterns": [
-        "./contracts/contracts/**/*.sol"
+        "./contracts/**/*.sol"
       ],
       "extensions": "sol"
     }
   },
   "scripts": {
-    "watch": "tsc -b tsconfig.json",
-    "watch-sol": "npm-watch compile-sol",
-    "compile": "sol-compiler contracts/",
-    "compile-sol": "truffle compile --all",
-    "contracts": "yarn compile && yarn abi-gen",
+    "build": "yarn contracts && tsc -b tsconfig.json",
+    "watch:lib": "tsc -b -W tsconfig.json",
+    "watch:contracts": "npm-watch contracts",
+    "contracts": "yarn compile-sol && yarn abi-gen",
+    "compile-sol": "sol-compiler contracts/",
+    "abi-gen": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "watch:test": "tsc -b -W tsconfig.json tsconfig.test.json",
     "test": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/index.spec.ts",
     "test:Bridge": "mocha --bail --exit --full-trace --require source-map-support/register --require make-promises-safe  lib/test/Bridge.spec.js",
@@ -24,7 +25,6 @@
     "test:EventListener": "mocha -r source-map-support/register -r make-promises-safe --bail --exit lib/contracts/test/EventListener.spec.js",
     "test:MerkleTree": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/MerkleTree.spec.ts",
     "test:Escrow": "ts-mocha --full-trace --require source-map-support/register --require make-promises-safe  test/Escrow.spec.ts",
-    "abi-gen": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "testchain:ganache": "ganache-cli -a 20 -p 9545 --gasLimit 10000000",
     "testchain:parity": "cd devchain && parity --config testnode.toml",
     "remix": "remixd -s . --remix-ide https://remix.ethereum.org",
