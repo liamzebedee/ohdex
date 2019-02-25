@@ -1,6 +1,6 @@
 import React from 'react';
 import {Grid, Typography, withStyles, TextField, Button} from '@material-ui/core';
-import tokenAbi from '../../../../../contracts/build/contracts/CustomToken';
+import tokenAbi from '../../../../../contracts/build/artifacts/CustomToken.json';
 import {toWei} from 'web3-utils';
 
 const styles:any = (theme:any) => ({
@@ -112,7 +112,7 @@ class TokenBridge extends React.Component<any> {
             state: "pending"
         })
 
-        const newToken = await new web3.eth.Contract(tokenAbi.abi).deploy({data : tokenAbi.bytecode, arguments: [tokenName, tokenSymbol, toWei(initialSupply)]}).send({from}) ;
+        const newToken = await new web3.eth.Contract(tokenAbi.compilerOutput.abi).deploy({data : tokenAbi.compilerOutput.evm.bytecode.object, arguments: [tokenName, tokenSymbol, toWei(initialSupply)]}).send({from}) ;
 
         this.setState({
             state: "done",
