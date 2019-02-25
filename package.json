@@ -1,12 +1,28 @@
 {
   "private": true,
+  "scripts": {
+    "build": "yarn wsrun -p ${npm_package_config_tsPackages} -r build",
+    "build:ts": ""
+  },
+  "config": {
+    "tsPackages": "@ohdex/contracts @ohdex/deployer @ohdex/multichain @ohdex/relayer @ohdex/bridge-ui @ohdex/ts-merkle-tree"
+  },
   "workspaces": {
     "packages": [
-      "packages/**"
+      "packages/bridge-ui",
+      "packages/contracts",
+      "packages/deployer",
+      "packages/multichain",
+      "packages/relayer",
+      "packages/ts-merkle-tree"      
     ],
     "nohoist": [
       "**/ganache-cli/**",
       "**/openzeppelin-solidity/**"
     ]
+  },
+  "devDependencies": {
+    "typescript": "^3.3.3333",
+    "wsrun": "^3.6.4"
   }
 }

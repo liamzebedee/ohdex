@@ -5,7 +5,6 @@ const BN = require("bn.js");
 
 import { Web3Wrapper } from '@0x/web3-wrapper';
 import { MnemonicWalletSubprovider, Web3ProviderEngine, RPCSubprovider } from '@0x/subproviders'
-import { providers } from "web3";
 import { resolve, dirname } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 

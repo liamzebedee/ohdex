@@ -1,0 +1,41 @@
+version: 2
+
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:8.9.1
+
+jobs:
+  test:
+    <<: *defaults  
+    steps:
+      - checkout
+      - run: yarn --version
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "yarn.lock" }}
+	  # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: yarn install --frozen-lockfile
+      - run:
+          name: Build all typescript code
+          command: yarn build
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "yarn.lock" }}
+
+      - persist_to_workspace:
+          root: ~/repo
+          paths: .
+            
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/

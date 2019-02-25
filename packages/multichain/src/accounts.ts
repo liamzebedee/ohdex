@@ -1,6 +1,5 @@
 import { IAccountsConfig } from "./types";
 import { MnemonicWalletSubprovider } from '@0x/subproviders'
-import { providers } from "web3";
 
 class AccountsConfig implements IAccountsConfig {
     data: any;

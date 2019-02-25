@@ -2,6 +2,7 @@
     "name": "@ohdex/relayer",
     "version": "0.1.0",
     "scripts": {
+        "build": "echo 0",
         "start": "ts-node src/index.ts",
         "test:watch": "",
         "test": "mocha -r source-map-support -r ts-node/register -r make-promises-safe --bail --exit test/index.spec.ts",

@@ -25,7 +25,7 @@ import { EthereumStateGadget, EthereumStateLeaf } from "./state";
 
 
 const AbiCoder = require('web3-eth-abi').AbiCoder();
-
+import Event from 'events'
 
 
 type hex = string;
@@ -80,7 +80,7 @@ export class EthereumChainTracker extends ChainTracker {
             this.logger.error(`Can't connect to endpoint`)
         })
 
-        const CONNECT_TIMEOUT = 3000;
+        const CONNECT_TIMEOUT = 7000;
         let connected = new Promise((res, rej) => {
             this.pe.on('block', res)
             setTimeout(
