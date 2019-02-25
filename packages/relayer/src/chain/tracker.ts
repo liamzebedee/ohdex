@@ -4,14 +4,18 @@ import { IChain } from "../../../multichain/lib/types";
 import { ITokenBridgeEventArgs } from "../../../contracts/build/wrappers/i_token_bridge";
 const eventEmitter = require("events");
 
-interface EventEmittedEvent extends Event {
+
+import Event from 'events'
+
+
+interface EventEmittedEvent {
     eventHash: string;
     newChainRoot: string;
     newChainIndex: string;
 }
 
 type chainId = string
-interface MessageSentEvent extends Event {
+interface MessageSentEvent {
     fromChain: chainId;
     toBridge: string;
     data: ITokenBridgeEventArgs;
