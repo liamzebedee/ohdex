@@ -24,6 +24,10 @@ class TokenReceiver extends React.Component<any> {
         success: false,
     }
 
+    bridgeB:any;
+    bridgedTokenAddress:string = "";
+    
+
     salt:BN = toBN(0);
 
     chainBProvider:any = null;
@@ -59,7 +63,9 @@ class TokenReceiver extends React.Component<any> {
             const bridge = new ethers.Contract(
                 getConfigValueByName(chainB, "bridgeAddress"), BridgeArtifact.compilerOutput.abi, this.chainBProvider
             );
-            // (address indexed token, address indexed receiver, uint256 amount, uint256 indexed chainId, uint256 salt )
+
+            this.bridgeB = bridge;
+            // address(bridgedToken), _receiver, _amount, _chainId, _salt
             const filter = bridge.filters.BridgedTokensClaimed(null, from, null, null, null);
             bridge.on(filter, this.tokensClaimed);
 
@@ -103,18 +109,18 @@ class TokenReceiver extends React.Component<any> {
         }
     }
 
-    tokensClaimed = (token:string, receiver:string, amount:any, chainId:any, salt:any) => {
-        // const {tokenAmount} = this.props.bridge;  
-        // const weiTokenAmount = toWei(tokenAmount);
-
-        // console.log(`Received ${fromWei(amount)} ${token} at ${receiver} from chain ${chainId} with salt: ${salt}`)
-        
-        // if(weiTokenAmount.eq(amount) && salt.eq(this.salt)) {
+    // address(bridgedToken), _receiver, _amount, _chainId, _salt
+    tokensClaimed = async (address:string, receiver:string, amount:string, chainId:string, salt:string) => {
+        // const {tokenAddress, chainA} = this.props.bridge;
+        // console.log(event);
+        // this.bridgedTokenAddress = await this.bridgeB.getBridgedTokenStatic(tokenAddress, getConfigValueByName(chainA, "chainId"));
+        this.bridgedTokenAddress = address;
         if(this.salt.eq(toBN(salt.toString()))) {
             this.setState({
                 success: true
             })
         }
+
     }
 
     render() {
@@ -132,7 +138,7 @@ class TokenReceiver extends React.Component<any> {
                  :
                     <>
                         <Typography align="center">Tokens Bridged!</Typography>
-                        <Typography align="center">Received {tokenAmount} at token address: {bridgingBack ? originTokenAddress : tokenAddress}</Typography>
+                        <Typography align="center">Received {tokenAmount} at token address: {bridgingBack ? originTokenAddress : this.bridgedTokenAddress}</Typography>
                     </>
                 }
             </>    

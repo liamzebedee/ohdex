@@ -14,6 +14,7 @@ import { dehexify } from "./utils";
 import { CrosschainState } from "./interchain";
 import { EventListenerContract } from "../../contracts/build/wrappers/event_listener";
 
+import Event from 'events';
 
 interface ChainConfig {
     chainType: 'ethereum';
