@@ -6,6 +6,7 @@ const { format } = winston;
 const { combine, label, json, simple } = format;
 
 
+import Event from 'events';
 import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
 import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
@@ -29,7 +30,7 @@ const eventEmitter = require("events");
 const forward = require('forward-emitter');
 
 type chainId = string;
-interface CrosschainEventEvent extends Event {
+interface CrosschainEventEvent {
     from: chainId;
     to: chainId;
     data: ITokenBridgeEventArgs;

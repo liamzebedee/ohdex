@@ -15,6 +15,7 @@ class ConfigManager {
         let relpath: string = "";
         switch(env) {
             case 'test':
+            case 'development':
                 relpath = "../../config/test_networks.json"
                 break;
             case 'production':

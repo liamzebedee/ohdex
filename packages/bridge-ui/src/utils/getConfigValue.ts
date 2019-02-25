@@ -4,6 +4,7 @@ import networks_prod from '../../../config/networks.json';
 import networks_test from '../../../config/test_networks.json';
 
 // let networks: typeof networks_prod;
+// let networks: typeof networks_prod | typeof networks_test;
 let networks: any;
 
 switch(process.env.NODE_ENV) {
@@ -14,6 +15,10 @@ switch(process.env.NODE_ENV) {
         networks = networks_prod;
         break;
 }
+
+export {
+    networks
+};
 
 export default (networkId:Number, configValue:string) => {
     const keys = Object.keys(networks);
