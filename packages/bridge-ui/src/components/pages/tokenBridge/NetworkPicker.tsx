@@ -1,7 +1,6 @@
 import React from 'react';
 import {FormControl, InputLabel, Select, MenuItem, withStyles, Typography, Button} from '@material-ui/core';
-import networks from "../../../../../config/networks";
-import {getChainName} from '../../../utils/getConfigValue';
+import {getChainName, networks} from '../../../utils/getConfigValue';
 import {connect} from 'react-redux';
 import bridgeActionTypes from '../../../reducers/bridge/bridgeActionTypes';
 import { node } from 'prop-types';
