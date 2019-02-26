@@ -6,11 +6,13 @@ packages/contracts/devchain/keys
 
 packages/bridge-ui/.next
 packages/deployer/yarn-error.log
-**/yarn.lock
 packages/contracts/.0x-artifacts
 packages/multichain/db
 yarn-error.log
-yarn.lock
 bridge-ui/.next
 contracts/build/
 contracts/devchain/keys
+
+draft/**
+
+packages/**/lib
