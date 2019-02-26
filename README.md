@@ -1,6 +1,8 @@
 ohdex
 =====
 
+[![CircleCI](https://circleci.com/gh/liamzebedee/ohdex/tree/master.svg?style=svg)](https://circleci.com/gh/liamzebedee/ohdex/tree/master)
+
 Bridge tokens between chains.
 
 Copyright Liam Zebedee and Mick de Graaf, 2019.
