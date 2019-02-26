@@ -15,6 +15,7 @@
     "build": "yarn contracts && tsc -b tsconfig.json",
     "watch:lib": "tsc -b -W tsconfig.json",
     "watch:contracts": "npm-watch contracts",
+    "build:contracts": "yarn contracts",
     "contracts": "yarn compile-sol && yarn abi-gen",
     "compile-sol": "sol-compiler contracts/",
     "abi-gen": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",

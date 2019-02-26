@@ -19,6 +19,9 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - run:
+          name: Build contracts
+          command: yarn build:contracts
+      - run:
           name: Build all typescript code
           command: yarn build
 
