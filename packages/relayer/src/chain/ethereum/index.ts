@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import { ethers } from 'ethers';
 
 import { Web3ProviderEngine, RPCSubprovider, BigNumber} from "0x.js";
@@ -6,13 +5,13 @@ import { PrivateKeyWalletSubprovider } from "@0x/subproviders";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 import { ChainTracker, EventEmittedEvent, MessageSentEvent } from "../tracker";
 
-import { EventEmitterContract, EventEmitterEvents } from '../../../../contracts/build/wrappers/event_emitter';
-import { EventListenerContract, EventListenerEvents } from '../../../../contracts/build/wrappers/event_listener';
-import { ITokenBridgeEvents, ITokenBridgeEventArgs, ITokenBridgeContract } from '../../../../contracts/build/wrappers/i_token_bridge';
-import { BridgeEvents, BridgeContract } from '../../../../contracts/build/wrappers/bridge';
-import { EscrowEvents, EscrowContract } from '../../../../contracts/build/wrappers/escrow';
+import { EventEmitterContract, EventEmitterEvents } from '@ohdex/contracts/build/wrappers/event_emitter';
+import { EventListenerContract, EventListenerEvents } from '@ohdex/contracts/build/wrappers/event_listener';
+import { ITokenBridgeEvents, ITokenBridgeEventArgs, ITokenBridgeContract } from '@ohdex/contracts/build/wrappers/i_token_bridge';
+import { BridgeEvents, BridgeContract } from '@ohdex/contracts/build/wrappers/bridge';
+import { EscrowEvents, EscrowContract } from '@ohdex/contracts/build/wrappers/escrow';
 import { hexify, dehexify, shortToLongBridgeId } from "../../utils";
-// import { MerkleTree, MerkleTreeProof } from "../../../../ts-merkle-tree/src";
+
 import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
 
@@ -134,39 +133,39 @@ export class EthereumChainTracker extends ChainTracker {
 
 
         this.eventListener = new EventListenerContract(
-            require('../../../../contracts/build/artifacts/EventListener.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/EventListener.json').compilerOutput.abi,
             this.conf.eventListenerAddress,
             this.pe,
             { from: this.account }
         );
         this.eventListener_sub = new ethers.Contract(
             this.conf.eventListenerAddress,
-            require('../../../../contracts/build/artifacts/EventListener.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/EventListener.json').compilerOutput.abi,
             this.ethersProvider
         )
 
-        this.state = new EthereumStateGadget(this.eventListener.address)
+        this.state = new EthereumStateGadget(`${this.conf.chainId}-${this.eventListener.address}`)
 
         this.eventEmitter_sub = new ethers.Contract(
             this.conf.eventEmitterAddress,
-            require('../../../../contracts/build/artifacts/EventEmitter.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/EventEmitter.json').compilerOutput.abi,
             this.ethersProvider
         )
         // this.eventEmitter_web3 = new this.web3.eth.Contract(
-        //     require('../../../../contracts/build/artifacts/EventEmitter.json').compilerOutput.abi, 
+        //     require('@ohdex/contracts/build/artifacts/EventEmitter.json').compilerOutput.abi, 
         //     this.conf.eventEmitterAddress, 
         //     { from: account }
         // )
 
 
         this.bridgeContract = new BridgeContract(
-            require('../../../../contracts/build/artifacts/Bridge.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/Bridge.json').compilerOutput.abi,
             this.conf.bridgeAddress,
             this.pe,
             { from: account }
         )
         this.escrowContract = new EscrowContract(
-            require('../../../../contracts/build/artifacts/Escrow.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/Escrow.json').compilerOutput.abi,
             this.conf.escrowAddress,
             this.pe,
             { from: account }
@@ -174,12 +173,12 @@ export class EthereumChainTracker extends ChainTracker {
 
         this.bridgeContract_sub = new ethers.Contract(
             this.conf.bridgeAddress,
-            require('../../../../contracts/build/artifacts/Bridge.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/Bridge.json').compilerOutput.abi,
             this.ethersProvider
         )
         this.escrowContract_sub = new ethers.Contract(
             this.conf.escrowAddress,
-            require('../../../../contracts/build/artifacts/Escrow.json').compilerOutput.abi,
+            require('@ohdex/contracts/build/artifacts/Escrow.json').compilerOutput.abi,
             this.ethersProvider
         )
 
@@ -408,7 +407,7 @@ export class EthereumChainTracker extends ChainTracker {
     private onTokensBridgedEvent() {
         // console.log(arguments)
         let args = Array.from(arguments)
-        args.pop()
+        // args.pop()
         let ev = Array.from(arguments).pop() as ethers.Event;
         
         let [ eventHash, targetBridge, chainId, receiver, token, amount, _salt ] = args;

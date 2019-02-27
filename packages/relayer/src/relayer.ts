@@ -9,13 +9,11 @@ const { combine, label, json, simple } = format;
 import Event from 'events';
 import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
-import { ITokenBridgeEventArgs } from "../../contracts/build/wrappers/i_token_bridge";
+import { ITokenBridgeEventArgs } from "@ohdex/contracts/build/wrappers/i_token_bridge";
 import { EventEmitter } from "./declarations";
 import { dehexify } from "./utils";
 import { CrosschainState } from "./interchain";
-import { EventListenerContract } from "../../contracts/build/wrappers/event_listener";
 
-import Event from 'events';
 
 interface ChainConfig {
     chainType: 'ethereum';

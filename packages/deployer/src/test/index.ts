@@ -1,7 +1,7 @@
 import { ConfigManager } from "../config";
 import { _deploy } from "../deploy";
-import { EthereumChain } from "../../../multichain/lib/ethereum/chain";
-import { AccountsConfig } from "../../../multichain/lib/accounts";
+import { EthereumChain } from "@ohdex/multichain";
+import { AccountsConfig } from "@ohdex/multichain";
 
 
 const configMgr = ConfigManager.load()

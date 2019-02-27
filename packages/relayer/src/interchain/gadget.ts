@@ -1,4 +1,4 @@
-import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree/src";
+import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
 // Holds state (events) in a merkle tree and creates proofs of events
 abstract class StateGadget {

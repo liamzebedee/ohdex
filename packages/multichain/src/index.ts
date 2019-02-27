@@ -51,6 +51,9 @@ async function run(cmd) {
     });
 }
 
+export * from './accounts';
+export * from './types';
+export * from './ethereum';
 export {
     run
 }

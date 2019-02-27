@@ -1,3 +1,1 @@
-import {
-    EthereumChain
-} from './chain';
+export * from './chain';

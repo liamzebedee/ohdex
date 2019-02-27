@@ -6,34 +6,42 @@ import 'mocha';
 import { expect, should, assert } from 'chai';
 const chai = require('chai')
 chai.use(require('chai-as-promised'))
+import 'chai-as-promised'
 chai.use(require('chai-events'));
 import { describe, it, setup, teardown } from 'mocha';
 // chai.use(require('chai-eventemitter'))
 import sinon from 'sinon'
 
-import { EventEmitterContract, EventEmitterEvents } from "../../contracts/build/wrappers/event_emitter";
-import { EventListenerContract, EventListenerEvents } from "../../contracts/build/wrappers/event_listener";
+import { EventEmitterContract, EventEmitterEvents } from "@ohdex/contracts/build/wrappers/event_emitter";
+import { EventListenerContract, EventListenerEvents } from "@ohdex/contracts/build/wrappers/event_listener";
 
 import { Relayer } from "../src/relayer";
 import { promisify } from 'util'
 
-import { AccountsConfig } from '../../multichain/lib/accounts';
+import { AccountsConfig } from '@ohdex/multichain';
 
 
 // @ts-ignore
 import { keccak256 } from 'ethereumjs-util';
 import { ethers } from "ethers";
 import { MultichainProviderFactory } from "./helper";
+import { dehexify, hexify } from "../src/utils";
 
 
-function getContractArtifact(name: string) {
-    return require(`../../contracts/build/contracts/${name}.json`)
+function getContractAbi(name: string) {
+    let json = require(`../../contracts/build/artifacts/${name}.json`);
+    return json.compilerOutput.abi;
 }
-function getDeployArgs(name, pe, from): [ string, AbiDefinition[],  Provider, Partial<TxData>] {
-    let json = require(`../../contracts/build/contracts/${name}.json`);
-    let bytecode = json.bytecode;
-    let abi = json.abi;
+function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ string, AbiDefinition[], Provider, Partial<TxData>] {
+    // let json = require(`../../contracts/build/contracts/${name}.json`);
+    let json = require(`../../contracts/build/artifacts/${name}.json`);
+    let bytecode = json.compilerOutput.evm.bytecode.object;
+    let abi = json.compilerOutput.abi;
     let provider = pe;
+
+    assert.ok(bytecode.length > 0)
+    assert.ok(abi.length > 0)
+    assert.ok(from != "")
 
     return [
         bytecode,
@@ -108,7 +116,7 @@ describe.only('Relayer', function(){
 
 
     process.on('exit', async function() {
-        await multichain.restore()
+        // await multichain.restore()
     })
 
     it('updates eventListener.stateroot', async() => {
@@ -132,7 +140,7 @@ describe.only('Relayer', function(){
         
         // @ts-ignore
         let eventEmitter = new EventEmitterContract(
-            getContractArtifact('EventEmitter').abi,
+            getContractAbi('EventEmitter').abi,
             chain1.config.eventEmitterAddress,
             chain1Pe,
             { from: '0x103c1c34d0f34b16babfbe205978ca9b4a0a447d' }
@@ -142,7 +150,7 @@ describe.only('Relayer', function(){
         let evHash = keccak256(`${new Date}`);
         
         await chain1Web3.awaitTransactionSuccessAsync(
-            await eventEmitter.emitEvent.sendTransactionAsync(evHash)
+            await eventEmitter.emitEvent.sendTransactionAsync(hexify(evHash))
         )
 
         await new Promise((res,rej) => setTimeout(res, 2000))
@@ -156,7 +164,7 @@ describe.only('Relayer', function(){
 
         let eventListener = new ethers.Contract(
             chain2.config.eventListenerAddress,
-            getContractArtifact('EventListener').abi,
+            getContractAbi('EventListener').abi,
             ethersProvider
         )
 

@@ -1,5 +1,4 @@
-import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
-import { MerkleTree } from "@ohdex/typescript-solidity-merkle-tree/src";
+import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 import { StateGadget, ChainStateLeaf } from "./gadget";
 import { keccak256, hexify } from "../utils";
 

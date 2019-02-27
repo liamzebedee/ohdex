@@ -3,7 +3,7 @@ import { MerkleTree } from "@ohdex/typescript-solidity-merkle-tree";
 import { StateGadget } from "../../interchain/gadget";
 import { dehexify } from "../../utils";
 import { keccak256, hexify } from "../../utils";
-import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree/src";
+import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
 
 class EthereumStateLeaf extends ChainStateLeaf {
