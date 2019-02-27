@@ -1,7 +1,7 @@
 
 
-import networks_prod from '../../../config/networks.json';
-import networks_test from '../../../config/test_networks.json';
+import networks_prod from '@ohdex/config/networks.json';
+import networks_test from '@ohdex/config/test_networks.json';
 
 // let networks: typeof networks_prod;
 // let networks: typeof networks_prod | typeof networks_test;

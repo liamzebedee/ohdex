@@ -9,26 +9,26 @@ import {promises as fs} from "fs";
 
 import {
     EscrowContract
-}  from '../../contracts/build/wrappers/escrow'
+}  from '@ohdex/contracts/build/wrappers/escrow'
 
 import {
     BridgeContract
-}   from '../../contracts/build/wrappers/bridge';
+}   from '@ohdex/contracts/build/wrappers/bridge';
 
 const networkA = process.env.NETWORK_A;
 const networkB = process.env.NETWORK_B;
 
-let completeConfig = require("../config/networks.json");
+let completeConfig = require("@ohdex/config/networks.json");
 let configA = completeConfig[networkA];
 let configB = completeConfig[networkB];
 
 
-const privateKey = require("../config/accounts.json").deployAccountPrivateKey;
+const privateKey = require("@ohdex/config/accounts.json").deployAccountPrivateKey;
 
 init();
 
 function getAbi(name:string) {
-    return require(`../contracts/build/contracts/${name}.json`).abi;
+    return require(`@ohdex/contracts/build/contracts/${name}.json`).abi;
 }
 
 async function init() {

@@ -4,10 +4,10 @@ let networks: any;
 
 switch(process.env.NODE_ENV) {
     case 'development':
-        networks = require('../../config/test_networks')
+        networks = require('@ohdex/config/test_networks')
         break;
     default:
-        networks = require('../../config/networks')
+        networks = require('@ohdex/config/networks')
         break;
 }
 

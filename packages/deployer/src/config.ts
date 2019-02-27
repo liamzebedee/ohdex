@@ -16,10 +16,10 @@ class ConfigManager {
         switch(env) {
             case 'test':
             case 'development':
-                relpath = "../../config/test_networks.json"
+                relpath = "@ohdex/config/test_networks.json"
                 break;
             case 'production':
-                relpath = "../../config/networks.json";
+                relpath = "@ohdex/config/networks.json";
                 break;
         }
         
