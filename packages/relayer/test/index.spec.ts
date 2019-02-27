@@ -12,8 +12,8 @@ import { describe, it, setup, teardown } from 'mocha';
 // chai.use(require('chai-eventemitter'))
 import sinon from 'sinon'
 
-import { EventEmitterContract, EventEmitterEvents } from "@ohdex/contracts/build/wrappers/event_emitter";
-import { EventListenerContract, EventListenerEvents } from "@ohdex/contracts/build/wrappers/event_listener";
+import { EventEmitterContract, EventEmitterEvents } from "@ohdex/contracts/lib/build/wrappers/event_emitter";
+import { EventListenerContract, EventListenerEvents } from "@ohdex/contracts/lib/build/wrappers/event_listener";
 
 import { Relayer } from "../src/relayer";
 import { promisify } from 'util'

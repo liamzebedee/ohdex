@@ -5,35 +5,35 @@ import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 
 import {
     EventListenerContract
-} from '@ohdex/contracts/build/wrappers/event_listener';
+} from '@ohdex/contracts/lib/build/wrappers/event_listener';
 
 import {
     EventEmitterContract,
-} from '@ohdex/contracts/build/wrappers/event_emitter';
+} from '@ohdex/contracts/lib/build/wrappers/event_emitter';
 
 import {
     EscrowContract
-}  from '@ohdex/contracts/build/wrappers/escrow'
+}  from '@ohdex/contracts/lib/build/wrappers/escrow'
 
 import {
     BridgeContract
-}   from '@ohdex/contracts/build/wrappers/bridge';
+}   from '@ohdex/contracts/lib/build/wrappers/bridge';
 
 import {
     WETH9Contract
-}   from '@ohdex/contracts/build/wrappers/weth9';
+}   from '@ohdex/contracts/lib/build/wrappers/weth9';
 
 import {
     DemoERC20Contract
-}   from '@ohdex/contracts/build/wrappers/demo_erc20';
+}   from '@ohdex/contracts/lib/build/wrappers/demo_erc20';
 import { ConfigManager } from "./config";
 
 const assert = require('assert');
 
 
 function getDeployArgs(name: string, pe: Web3ProviderEngine, from: string): [ string, AbiDefinition[], Provider, Partial<TxData>] {
-    // let json = require(`@ohdex/contracts/build/contracts/${name}.json`);
-    let json = require(`@ohdex/contracts/build/artifacts/${name}.json`);
+    // let json = require(`@ohdex/contracts/lib/build/contracts/${name}.json`);
+    let json = require(`@ohdex/contracts/lib/build/artifacts/${name}.json`);
     let bytecode = json.compilerOutput.evm.bytecode.object;
     let abi = json.compilerOutput.abi;
     let provider = pe;

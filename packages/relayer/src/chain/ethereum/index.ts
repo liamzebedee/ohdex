@@ -5,11 +5,11 @@ import { PrivateKeyWalletSubprovider } from "@0x/subproviders";
 import { Web3Wrapper, AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 import { ChainTracker, EventEmittedEvent, MessageSentEvent } from "../tracker";
 
-import { EventEmitterContract, EventEmitterEvents } from '@ohdex/contracts/build/wrappers/event_emitter';
-import { EventListenerContract, EventListenerEvents } from '@ohdex/contracts/build/wrappers/event_listener';
-import { ITokenBridgeEvents, ITokenBridgeEventArgs, ITokenBridgeContract } from '@ohdex/contracts/build/wrappers/i_token_bridge';
-import { BridgeEvents, BridgeContract } from '@ohdex/contracts/build/wrappers/bridge';
-import { EscrowEvents, EscrowContract } from '@ohdex/contracts/build/wrappers/escrow';
+import { EventEmitterContract, EventEmitterEvents } from '@ohdex/contracts/lib/build/wrappers/event_emitter';
+import { EventListenerContract, EventListenerEvents } from '@ohdex/contracts/lib//build/wrappers/event_listener';
+import { ITokenBridgeEvents, ITokenBridgeEventArgs, ITokenBridgeContract } from '@ohdex/contracts/lib/build/wrappers/i_token_bridge';
+import { BridgeEvents, BridgeContract } from '@ohdex/contracts/lib/build/wrappers/bridge';
+import { EscrowEvents, EscrowContract } from '@ohdex/contracts/lib/build/wrappers/escrow';
 import { hexify, dehexify, shortToLongBridgeId } from "../../utils";
 
 import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";

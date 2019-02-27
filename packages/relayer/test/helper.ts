@@ -15,7 +15,7 @@ export class MultichainProviderFactory {
     }
 
     async connect() {
-        const config = require('../../config/test_networks.json');
+        const config = require('@ohdex/config/test_networks.json');
 
         await this.connect_(config['kovan'])
         await this.connect_(config['rinkeby'])

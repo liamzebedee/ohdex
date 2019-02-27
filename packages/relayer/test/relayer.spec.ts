@@ -1,9 +1,9 @@
 import { Web3ProviderEngine, RPCSubprovider } from "0x.js";
 import { Web3Wrapper } from "@0x/web3-wrapper";
 import { BigNumber } from "@0x/utils";
-import { BridgedTokenContract } from '@ohdex/contracts/build/wrappers/bridged_token';
+import { BridgedTokenContract } from '@ohdex/contracts/lib/build/wrappers/bridged_token';
 import { MultichainProviderFactory, MultichainInfo } from "./helper";
-import { EscrowContract } from "@ohdex/contracts/build/wrappers/escrow";
+import { EscrowContract } from "@ohdex/contracts/lib/build/wrappers/escrow";
 
 function getContractArtifact(name: string) {
     name = name.split('Contract')[0];

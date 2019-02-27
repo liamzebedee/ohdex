@@ -160,8 +160,7 @@ describe('Bridge', function(){
             let _amount = new BigNumber('10');
             let _chainId = chainId;
             let _salt = salt;
-
-            let _targetBridge = await bridgeForeign.tokenBridgeId.callAsync()
+            let _targetBridge = await bridgeForeign.address
 
             await web3.awaitTransactionSuccessAsync(
                 await bridgedToken.mint.sendTransactionAsync(user, new BigNumber('10000000'))

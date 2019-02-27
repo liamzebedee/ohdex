@@ -1,7 +1,7 @@
 import { BlockWithTransactionData } from "ethereum-protocol";
 import { EventEmitter } from "../declarations";
 import { IChain } from "@ohdex/multichain";
-import { ITokenBridgeEventArgs } from "@ohdex/contracts/build/wrappers/i_token_bridge";
+import { ITokenBridgeEventArgs } from "@ohdex/contracts/lib/build/wrappers/i_token_bridge";
 const eventEmitter = require("events");
 
 

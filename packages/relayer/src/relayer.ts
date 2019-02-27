@@ -9,7 +9,7 @@ const { combine, label, json, simple } = format;
 import Event from 'events';
 import { MerkleTree, MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
-import { ITokenBridgeEventArgs } from "@ohdex/contracts/build/wrappers/i_token_bridge";
+import { ITokenBridgeEventArgs } from "@ohdex/contracts/lib/build/wrappers/i_token_bridge";
 import { EventEmitter } from "./declarations";
 import { dehexify } from "./utils";
 import { CrosschainState } from "./interchain";

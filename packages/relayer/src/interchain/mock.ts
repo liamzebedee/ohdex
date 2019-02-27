@@ -1,6 +1,6 @@
 import { StateGadget } from "./gadget";
 import { ChainStateLeaf } from ".";
-import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree/src";
+import { MerkleTreeProof } from "@ohdex/typescript-solidity-merkle-tree";
 
 class MockStateLeaf extends ChainStateLeaf {
     data: string;
