@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "yarn contracts && tsc -b tsconfig.json",
+    "build": "yarn build:contracts && yarn build:ts",
     "build:ts": "tsc -b",
     "watch:ts": "tsc -b -W tsconfig.json",
     "watch:contracts": "npm-watch contracts",

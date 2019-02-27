@@ -3,11 +3,12 @@
   "scripts": {
     "build:contracts": "yarn wsrun -p ${npm_package_config_solPackages} -r build:contracts",
     "build": "yarn wsrun -p ${npm_package_config_tsPackages} -r build",
-    "build:ts": ""
+    "test": "yarn wsrun -p ${npm_package_config_testPkgs} -r test"
   },
   "config": {
     "solPackages": "@ohdex/contracts @ohdex/typescript-solidity-merkle-tree",
-    "tsPackages": "@ohdex/contracts @ohdex/deployer @ohdex/multichain @ohdex/relayer @ohdex/bridge-ui @ohdex/typescript-solidity-merkle-tree"
+    "tsPackages": "@ohdex/contracts @ohdex/deployer @ohdex/multichain @ohdex/relayer @ohdex/bridge-ui @ohdex/typescript-solidity-merkle-tree",
+    "testPkgs": "@ohdex/contracts @ohdex/typescript-solidity-merkle-tree @ohdex/bridge-ui"
   },
   "workspaces": {
     "packages": [

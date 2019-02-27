@@ -6,6 +6,10 @@ import { keccak256 } from 'ethereumjs-util';
 import { Web3ProviderEngine } from "0x.js";
 import { AbiDefinition, Provider, TxData } from '@0x/web3-wrapper';
 
+declare module 'ethereumjs-util' {
+    function keccak256(x: any): Buffer;
+}
+
 function getDeployArgs(name: string, pe: Provider, from: string): [ string, AbiDefinition[], Provider, Partial<TxData>] {
     let json = require(`../../build/artifacts/${name}.json`);
     let bytecode = json.compilerOutput.evm.bytecode.object;

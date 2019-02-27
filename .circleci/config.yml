@@ -24,6 +24,9 @@ jobs:
       - run:
           name: Build all typescript code
           command: yarn build
+      - run:
+          name: Test
+          command: yarn test
 
       - save_cache:
           paths:

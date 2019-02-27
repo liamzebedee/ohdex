@@ -11,14 +11,14 @@
   ],
   "scripts": {
     "watch": "tsc -bW -p tsconfig.json",
-    "build": "yarn build:contracts && yarn build:typescript",
-    "build:typescript": "tsc -p tsconfig.json",
+    "build": "yarn build:contracts && yarn build:ts",
+    "build:ts": "tsc -p tsconfig.json",
     "build:contracts": "sol-compiler contracts/ && yarn build:contracts:abis",
     "build:contracts:abis": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "test:watch": "tsc -p tsconfig.test.json -W",
-    "test": "npm run test:solidity && npm run test:typescript",
+    "test": "npm run test:solidity && npm run test:ts",
     "test:solidity": "mocha lib/test/solidity.spec.js",
-    "test:typescript": "mocha lib/test/typescript.spec.js"
+    "test:ts": "mocha lib/test/typescript.spec.js"
   },
   "repository": {
     "type": "git",

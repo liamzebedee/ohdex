@@ -2,8 +2,8 @@
     "compilerOptions": {
         "composite": true,
         "lib": [
+            "dom",
             "es2018",
-            "dom"
         ],
         "rootDir": ".",
         "outDir": "lib",
@@ -13,10 +13,12 @@
         "module": "commonjs",
         "sourceMap": true,
         "declaration": true,
-        "declarationMap": true
+        "declarationMap": true,
+        "target": "es2018"
     },
     "include": [
         "src",
+        "test",
         "build/wrappers/*.ts",
         "build/artifacts/*.json"
     ],
