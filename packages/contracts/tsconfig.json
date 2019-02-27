@@ -20,12 +20,10 @@
         "composite": true,
         "resolveJsonModule": true
     },
-    "references": [
-      { "path": "../ts-merkle-tree" }
-    ],
     "include": [
         "./build/wrappers/*",
-        "./build/artifacts/*.json"
+        "./build/artifacts/*.json",
+        "test"
     ],
     "exclude": [
         "node_modules"
