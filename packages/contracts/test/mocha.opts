@@ -1,0 +1,1 @@
+--bail --exit --full-trace -r source-map-support -r make-promises-safe

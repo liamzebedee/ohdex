@@ -17,8 +17,8 @@
     "build:contracts:abis": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
     "test:watch": "tsc -p tsconfig.test.json -W",
     "test": "npm run test:solidity && npm run test:typescript",
-    "test:solidity": "mocha -r source-map-support/register -r make-promises-safe --bail --exit lib/test/solidity.spec.js",
-    "test:typescript": "mocha -r source-map-support/register -r make-promises-safe --bail --exit lib/test/typescript.spec.js"
+    "test:solidity": "mocha lib/test/solidity.spec.js",
+    "test:typescript": "mocha lib/test/typescript.spec.js"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,6 @@
     "0x.js": "^5.0.0"
   },
   "devDependencies": {
-    "ts-node": "^8.0.2",
     "typescript": "^3.3.1",
     "@types/node": "^10.12.21",
     "@0x/abi-gen": "^2.0.3",
