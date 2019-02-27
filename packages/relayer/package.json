@@ -43,8 +43,7 @@
         "typescript-solidity-merkle-tree": "^0.2.3",
         "web3": "^1.0.0-beta.37",
         "web3-eth-abi": "^1.0.0-beta.43",
-        "winston": "^3.2.1",
-        "yarn": "^1.13.0"
+        "winston": "^3.2.1"
     },
     "devDependencies": {
         "@types/chai": "^4.1.7",

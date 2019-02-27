@@ -31,12 +31,12 @@
   },
   "homepage": "https://github.com/liamzebedee/typescript-solidity-merkle-tree#readme",
   "dependencies": {
-    "ts-node": "^8.0.2",
-    "typescript": "^3.3.1"
+    "0x.js": "^5.0.0"
   },
   "devDependencies": {
+    "ts-node": "^8.0.2",
+    "typescript": "^3.3.1",
     "@types/node": "^10.12.21",
-    "0x.js": "^5.0.0",
     "@0x/abi-gen": "^2.0.3",
     "@0x/sol-compiler": "^3.0.3",
     "@0x/sol-trace": "^2.0.4",

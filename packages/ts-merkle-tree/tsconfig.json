@@ -7,10 +7,6 @@
         ],
         "rootDir": ".",
         "outDir": "lib",
-        "typeRoots": [
-          "node_modules/@0x/typescript-typings/types",
-          "node_modules/@types"
-        ],
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
