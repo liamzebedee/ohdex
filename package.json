@@ -16,7 +16,8 @@
       "packages/deployer",
       "packages/multichain",
       "packages/relayer",
-      "packages/ts-merkle-tree"      
+      "packages/ts-merkle-tree",
+      "packages/config"
     ],
     "nohoist": [
       "**/ganache-cli/**",

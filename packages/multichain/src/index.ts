@@ -29,8 +29,8 @@ require('yargs')
 
 
 async function run(cmd) {
-    const config = require('../../config/test_networks.json');
-    const accountsConfig = await AccountsConfig.load('../../config/test_accounts.json')
+    const config = require("@ohdex/config/test_networks.json");
+    const accountsConfig = await AccountsConfig.load(require.resolve('@ohdex/config/test_accounts.json'))
 
     let conf: IChainConfig = config[cmd.name];
     if(!conf) throw new Error(`Couldn't find config for chain ${cmd.name}`)

@@ -15,7 +15,7 @@ export class EthereumChain implements IChain {
     server: any;
 
     async start(conf: IChainConfig, accountsConf: IAccountsConfig): Promise<any> {
-        let dbpath = resolve(dirname(require.resolve(`../../package.json`)), `db/${conf.chainId}`)
+        let dbpath = resolve(dirname(require.resolve(`@ohdex/multichain`)), `../../db/${conf.chainId}`)
         let firstStart = !existsSync(dbpath)
         if(firstStart) {
             mkdirSync(dbpath)
