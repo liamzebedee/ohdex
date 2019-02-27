@@ -25,9 +25,9 @@
     ],
     "include": [
         "./build/wrappers/*",
-        "./build/artifacts/*.json",
+        "./build/artifacts/*.json"
     ],
     "exclude": [
-        "node_modules/**"
+        "node_modules"
     ]
 }

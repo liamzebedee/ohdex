@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "lib/",
         "lib": [
-            "es6"
+            "es2018",
+            "dom"
         ],
         "typeRoots": [
           "node_modules/@0x/typescript-typings/types",
@@ -11,5 +14,15 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "module": "commonjs",
-    }
+    },
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
+    "references": [
+        { "path": "../contracts" },
+        { "path": "../multichain" }
+    ]
 }

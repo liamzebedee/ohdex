@@ -20,10 +20,11 @@
         "declarationMap": true
     },
     "include": [
-        "src/**/*.ts",
-        "build/wrappers/*.ts"
+        "src",
+        "build/wrappers/*.ts",
+        "build/artifacts/*.json"
     ],
     "exclude": [
-        "node_modules/**"
+        "**/node_modules"
     ]
 }

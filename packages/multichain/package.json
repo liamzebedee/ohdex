@@ -9,6 +9,7 @@
         "ethereum": "multichain run --chain ethereum --name kovan",
         "test": "ts-mocha -p tsconfig.json --require make-promises-safe --bail --exit test/index.spec.ts"
     },
+    "main": "lib/src/",
     "bin": {
         "multichain": "./src/index.ts"
     },
@@ -21,17 +22,6 @@
         "@0x/utils": "^3.0.1",
         "@0x/web3-wrapper": "^4.0.2",
         "@0xproject/abi-gen": "^1.0.13",
-        "@types/chai": "^4.1.7",
-        "@types/chai-as-promised": "^7.1.0",
-        "@types/commander": "^2.12.2",
-        "@types/ethereumjs-util": "^5.2.0",
-        "@types/leveldown": "^4.0.0",
-        "@types/levelup": "^3.1.0",
-        "@types/lodash": "^4.14.120",
-        "@types/mocha": "^5.2.5",
-        "@types/node": "^10.12.21",
-        "@types/web3": "^1.0.18",
-        "@types/yargs": "^12.0.8",
         "add": "^2.0.6",
         "bluebird": "^3.5.3",
         "bn.js": "^4.11.8",
@@ -66,5 +56,18 @@
         "winston": "^3.2.1",
         "yargs": "^12.0.5",
         "yarn": "^1.13.0"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/chai-as-promised": "^7.1.0",
+        "@types/commander": "^2.12.2",
+        "@types/ethereumjs-util": "^5.2.0",
+        "@types/leveldown": "^4.0.0",
+        "@types/levelup": "^3.1.0",
+        "@types/lodash": "^4.14.120",
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^10.12.21",
+        "@types/web3": "^1.0.18",
+        "@types/yargs": "^12.0.8"
     }
 }

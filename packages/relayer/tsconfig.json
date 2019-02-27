@@ -18,9 +18,15 @@
         "sourceMap": true
     },
     "include": [
-        "./src/*"
+        "src",
+        "test",
     ],
     "exclude": [
-        "node_modules/**"
+        "**/node_modules"
+    ],
+    "references": [
+        { "path": "../contracts" },
+        { "path": "../multichain" },
+        { "path": "../ts-merkle-tree" }
     ]
 }

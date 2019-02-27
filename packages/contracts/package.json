@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "yarn contracts && tsc -b tsconfig.json",
+    "build:ts": "tsc -b ",
     "watch:lib": "tsc -b -W tsconfig.json",
     "watch:contracts": "npm-watch contracts",
     "build:contracts": "yarn contracts",
@@ -46,11 +47,6 @@
     "@0x/web3-wrapper": "^3.2.4",
     "@0xproject/abi-gen": "^1.0.13",
     "@rainblock/merkle-patricia-tree": "^4.0.0",
-    "@types/chai-as-promised": "^7.1.0",
-    "@types/ethereumjs-util": "^5.2.0",
-    "@types/lodash": "^4.14.120",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^11.9.4",
     "add": "^2.0.6",
     "chai": "^4.2.0",
     "circom": "^0.0.24",
@@ -77,6 +73,11 @@
     "yarn": "^1.13.0"
   },
   "devDependencies": {
-    "npm-watch": "^0.5.0"
+    "npm-watch": "^0.5.0",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/ethereumjs-util": "^5.2.0",
+    "@types/lodash": "^4.14.120",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^11.9.4"
   }
 }

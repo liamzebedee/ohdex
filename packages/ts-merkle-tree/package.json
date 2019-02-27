@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "watch": "tsc -bW -p tsconfig.json",
-    "build": "yarn build:typescript && yarn build:contracts",
+    "build": "yarn build:contracts && yarn build:typescript",
     "build:typescript": "tsc -p tsconfig.json",
     "build:contracts": "sol-compiler contracts/ && yarn build:contracts:abis",
     "build:contracts:abis": "abi-gen --abis 'build/artifacts/*.json' --template contract_templates/contract.handlebars --partials './contract_templates/partials/**/*.handlebars' --output ./build/wrappers --backend web3",
@@ -31,11 +31,11 @@
   },
   "homepage": "https://github.com/liamzebedee/typescript-solidity-merkle-tree#readme",
   "dependencies": {
-    "@types/node": "^10.12.21",
     "ts-node": "^8.0.2",
     "typescript": "^3.3.1"
   },
   "devDependencies": {
+    "@types/node": "^10.12.21",
     "0x.js": "^5.0.0",
     "@0x/abi-gen": "^2.0.3",
     "@0x/sol-compiler": "^3.0.3",
