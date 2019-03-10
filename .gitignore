@@ -13,6 +13,5 @@ bridge-ui/.next
 contracts/build/
 contracts/devchain/keys
 
-draft/**
 
 packages/**/lib
