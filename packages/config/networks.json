@@ -1,4 +1,14 @@
 {
+    "mainnet": {
+        "chainId": 1,
+        "chainType": "ethereum",
+        "rpcUrl": "https://mainnet.infura.io/v3/3049535d150e49729f54f6f8bef40a1b"
+    },
+    "ropsten": {
+        "chainId": 3,
+        "chainType": "ethereum",
+        "rpcUrl": "https://ropsten.infura.io/v3/3049535d150e49729f54f6f8bef40a1b"
+    },
     "kovan": {
         "chainId": 42,
         "chainType": "ethereum",
@@ -28,5 +38,20 @@
         "wethToken": "0xde874235757af13631f34b2ee9133e802965a83e",
         "aliceToken": "0x3b26b56b12f0a35ffadc7aef823459dd37d8846b",
         "bobToken": "0x43d0627df85ceddfe44e0433c8b87e7b7f5b8150"
+    },
+    "poaSokol": {
+        "chainId": 77,
+        "chainType": "ethereum",
+        "rpcUrl": "https://sokol.poa.network"
+    },
+    "goerli": {
+        "chainId": 5,
+        "chainType": "ethereum",
+        "rpcUrl": "https://goerli.infura.io/v3/3049535d150e49729f54f6f8bef40a1b"
+    },
+    "xdai": {
+        "chainId": 100,
+        "chainType": "ethereum",
+        "rpcUrl": "https://dai.poa.network"
     }
 }

@@ -165,8 +165,11 @@ class NetworkPicker extends React.Component<any> {
         let networkKeys = Object.keys(networks);
 
         for(let i = 0; i < networkKeys.length; i ++) {
-            const chainId = networks[networkKeys[i]].chainId
-            chains.push({chainId, name: networkKeys[i] });
+            const { chainId } = networks[networkKeys[i]]
+            chains.push({
+                chainId, 
+                name: networkKeys[i]
+            });
         }
 
         return chains;
