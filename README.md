@@ -28,3 +28,13 @@ NODE_ENV=development yarn start
 cd bridge-ui/
 NODE_ENV=development yarn dev
 ```
+
+## Faucets for testnets
+
+- [POA SOKOL](https://faucet.poa.network/)
+- [GOERLI](https://goerli-faucet.slock.it/)
+- [Rinkeby](https://faucet.rinkeby.io/) 
+- [Kovan](https://faucet.kovan.network/)
+- [Ropsten](https://faucet.ropsten.be/)
+
+
